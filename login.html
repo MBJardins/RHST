@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Maple Bear Jardins · RH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red:       #c8102e;
+      --red-dark:  #9f0d25;
+      --red-deep:  #6b0819;
+      --cream:     #fdf8f3;
+      --gold:      #d4a847;
+      --gold-lt:   #f0d080;
+      --text:      #1a1007;
+      --muted:     #6b5c4e;
+      --border:    rgba(200,16,46,.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ── */
+    .panel-left {
+      background: linear-gradient(160deg, var(--red-deep) 0%, var(--red) 55%, #e8253f 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 52px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background texture */
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(255,255,255,.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,.04) 0%, transparent 40%);
+    }
+
+    /* Maple leaf watermark */
+    .panel-left::after {
+      content: '🍁';
+      position: absolute;
+      font-size: 380px;
+      right: -60px;
+      bottom: -60px;
+      opacity: .06;
+      line-height: 1;
+      pointer-events: none;
+      filter: grayscale(1) brightness(10);
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 100px;
+      padding: 8px 16px 8px 8px;
+      backdrop-filter: blur(8px);
+    }
+
+    .brand-badge .bear {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+    }
+
+    .brand-badge span {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .panel-hero {
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 4vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.08;
+      letter-spacing: -.02em;
+      margin-bottom: 20px;
+    }
+
+    .panel-hero h1 em {
+      font-style: normal;
+      color: var(--gold-lt);
+    }
+
+    .panel-hero p {
+      color: rgba(255,255,255,.72);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 340px;
+      font-weight: 300;
+    }
+
+    .modules {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .module-pill {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.9);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 100px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* ── RIGHT PANEL ── */
+    .panel-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      background: var(--cream);
+      position: relative;
+    }
+
+    /* Subtle grid pattern */
+    .panel-right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: .5;
+    }
+
+    .login-box {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-box-header {
+      margin-bottom: 36px;
+    }
+
+    .login-box-header .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+
+    .login-box-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+
+    .login-box-header p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Divider line with ornament */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,16,46,.2), transparent);
+    }
+    .divider span {
+      width: 6px;
+      height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      opacity: .4;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: .4;
+      pointer-events: none;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 14px 14px 14px 42px;
+      border: 1.5px solid #ddd2c8;
+      border-radius: 12px;
+      background: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 4px rgba(200,16,46,.08);
+    }
+
+    .input-wrap input::placeholder {
+      color: #bbb0a6;
+    }
+
+    /* Toggle senha */
+    .toggle-pw {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      opacity: .4;
+      transition: opacity .15s;
+      padding: 0;
+    }
+    .toggle-pw:hover { opacity: .8; }
+
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(160deg, #e8253f 0%, var(--red) 50%, var(--red-dark) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .02em;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .2s;
+      box-shadow: 0 8px 24px rgba(200,16,46,.3);
+      margin-top: 8px;
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(255,255,255,.12) 0%, transparent 60%);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(200,16,46,.4);
+    }
+
+    .login-btn:active { transform: translateY(0); }
+
+    .login-btn .btn-content {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Loading state */
+    .login-btn.loading .btn-content { opacity: 0; }
+    .login-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+    }
+
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 14px;
+      animation: slideIn .2s ease;
+    }
+
+    .error-msg.show { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-note strong { color: var(--text); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 760px) {
+      body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+
+      .panel-left {
+        padding: 28px 24px 32px;
+        min-height: auto;
+      }
+
+      .panel-left::after { font-size: 200px; right: -30px; bottom: -30px; }
+
+      .panel-hero h1 { font-size: 30px; }
+      .panel-hero p { display: none; }
+
+      .panel-right {
+        padding: 32px 24px 48px;
+        align-items: flex-start;
+      }
+    }
+
+    /* Entry animation */
+    .panel-left { animation: fadeLeft .5s ease both; }
+    .panel-right { animation: fadeRight .5s .1s ease both; }
+
+    @keyframes fadeLeft {
+      from { opacity: 0; transform: translateX(-24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeRight {
+      from { opacity: 0; transform: translateX(24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .login-box > * {
+      animation: fadeUp .4s ease both;
+    }
+    .login-box > *:nth-child(1) { animation-delay: .15s; }
+    .login-box > *:nth-child(2) { animation-delay: .2s; }
+    .login-box > *:nth-child(3) { animation-delay: .25s; }
+    .login-box > *:nth-child(4) { animation-delay: .28s; }
+    .login-box > *:nth-child(5) { animation-delay: .31s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── LEFT ── -->
+  <aside class="panel-left">
+    <div class="brand">
+      <div class="brand-badge">
+        <div class="bear">🐻</div>
+        <span>Maple Bear Jardins</span>
+      </div>
+    </div>
+
+    <div class="panel-hero">
+      <h1>Sistema<br>de <em>Recursos<br>Humanos</em></h1>
+      <p>Funcionários, vínculos, jornadas, ponto, banco de horas e fechamento de folha — tudo em um só lugar.</p>
+    </div>
+
+    <div class="modules">
+      <span class="module-pill">👤 Funcionários</span>
+      <span class="module-pill">📄 Vínculos</span>
+      <span class="module-pill">⏱ Jornadas</span>
+      <span class="module-pill">📍 Ponto</span>
+      <span class="module-pill">⏳ Banco de horas</span>
+      <span class="module-pill">💸 Folha</span>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT ── -->
+  <main class="panel-right">
+    <div class="login-box">
+
+      <div class="login-box-header">
+        <div class="eyebrow">Acesso restrito</div>
+        <h2>Bem-vindo de volta</h2>
+        <p>Entre com suas credenciais para acessar o sistema.</p>
+      </div>
+
+      <div class="divider"><span></span></div>
+
+      <form id="login-form" autocomplete="on">
+
+        <div class="field">
+          <label for="cpf">Usuário (CPF)</label>
+          <div class="input-wrap">
+            <span class="icon">👤</span>
+            <input
+              id="cpf"
+              name="cpf"
+              type="text"
+              placeholder="000.000.000-00"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="senha">Senha</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              id="senha"
+              name="senha"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="toggle-pw" id="toggle-pw" title="Mostrar/ocultar senha">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="login-btn" id="login-btn">
+          <span class="btn-content">Entrar no sistema →</span>
+        </button>
+
+        <div class="error-msg" id="error-msg">
+          <span>⚠️</span>
+          <span id="error-text">Usuário ou senha inválidos.</span>
+        </div>
+
+      </form>
+
+      <div class="footer-note">
+        <strong>Maple Bear Jardins</strong> · Sistema interno de RH<br>
+        Uso exclusivo da equipe autorizada
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/funcionarios_acesso";
+
+    const form    = document.getElementById('login-form');
+    const btn     = document.getElementById('login-btn');
+    const errBox  = document.getElementById('error-msg');
+    const errText = document.getElementById('error-text');
+    const togglePw = document.getElementById('toggle-pw');
+    const senhaInput = document.getElementById('senha');
+
+    // Toggle mostrar senha
+    togglePw.addEventListener('click', () => {
+      const show = senhaInput.type === 'password';
+      senhaInput.type = show ? 'text' : 'password';
+      togglePw.textContent = show ? '🙈' : '👁️';
+    });
+
+    function showError(msg) {
+      errText.textContent = msg;
+      errBox.classList.add('show');
+    }
+
+    function hideError() {
+      errBox.classList.remove('show');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const cpf   = document.getElementById('cpf').value.trim();
+      const senha = senhaInput.value.trim();
+
+      if (!cpf || !senha) {
+        showError('Preencha usuário e senha.');
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cpf, senha })
+        });
+
+        if (!res.ok) throw new Error('Erro de servidor.');
+
+        const result = await res.json();
+
+        // Normaliza resposta: objeto direto, array, ou wrapped
+        const rows = Array.isArray(result) ? result : (result.data || result.body || [result]);
+        const usuario = rows.length > 0 ? rows[0] : null;
+
+        // Aceita: status=success OU presenca de cpf/id no retorno
+        const logado = usuario && (
+          usuario.status === 'success' ||
+          usuario.cpf ||
+          usuario.id ||
+          usuario.nome
+        );
+
+        // Rejeita explicitamente: status=error
+        const rejeitado = usuario && usuario.status === 'error';
+
+        if (logado && !rejeitado) {
+          localStorage.setItem('mb_logged_in', '1');
+          localStorage.setItem('mb_user_nome', usuario.nome || usuario.cpf || '');
+          localStorage.setItem('mb_user_cpf', usuario.cpf || '');
+          localStorage.setItem('mb_user_perfil', usuario.perfil || 'rh');
+          btn.style.background = 'linear-gradient(160deg, #16a34a, #15803d)';
+          btn.querySelector('.btn-content').textContent = 'Acesso liberado';
+          btn.classList.remove('loading');
+          setTimeout(() => { window.location.href = 'index.html'; }, 600);
+        } else {
+          showError(usuario?.message || 'Usuario ou senha invalidos. Verifique seus dados.');
+          btn.classList.remove('loading');
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.error(err);
+        showError('Não foi possível conectar ao servidor. Tente novamente.');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestão RH</title>
+  <style>
+:root{
+  --brand:#c8102e; --brand-dark:#9f0d25; --accent:#1a73e8; --text:#1f2937; --muted:#64748b;
+  --line:#e5e7eb; --bg:#f6f7fb; --card:#fff; --shadow:0 8px 24px rgba(2,6,23,.08);
+  --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --soft-ok:#ecfdf5; --soft-warn:#fff7ed; --soft-blue:#eef6ff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand-wrap{display:flex;align-items:center;gap:12px}.brand-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(180deg,#fff,#f3f4f6);display:grid;place-items:center;border:1px solid var(--line);font-size:26px}
+.brand-title{display:flex;flex-direction:column;line-height:1.15}.brand-title strong{font-size:18px;font-weight:900}.brand-title span{color:var(--muted);font-size:13px}
+.container{max-width:1180px;margin:28px auto 48px;padding:0 18px}
+.hero{background:linear-gradient(135deg,#fff,#fff5f6);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{margin:0 0 6px;font-size:clamp(28px,4vw,42px);letter-spacing:-.04em}.hero p{margin:0;color:var(--muted);line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{appearance:none;border:none;text-decoration:none;cursor:pointer;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#eef2f7;color:#111827}
+.btn:hover{background:#dde5f0}.btn.primary{background:linear-gradient(180deg,#d92540,var(--brand));color:#fff}.btn.blue{background:linear-gradient(180deg,#2a85ff,#1a73e8);color:#fff}.btn.green{background:#198754;color:#fff}.btn.warn{background:#f59e0b;color:#fff}.btn.danger{background:#dc3545;color:#fff}
+select,input,textarea{width:100%;padding:10px 12px;border:1px solid #d0d7de;border-radius:10px;background:#fff;font-size:14px;min-height:42px}
+textarea{min-height:86px;resize:vertical}
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px 10px;align-items:end}.form-group{display:flex;flex-direction:column}.span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+label{font-size:11px;font-weight:800;color:#495468;text-transform:uppercase;margin-bottom:4px;display:flex;gap:6px;align-items:center}
+.help-tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#facc15;color:#3b2f00;font-size:11px;font-weight:900;cursor:help;border:1px solid #eab308}
+.status{display:none;padding:12px;border-radius:10px;margin-top:14px;font-weight:800;white-space:pre-wrap}.status.success{display:block;background:#d1e7dd;color:#0f5132}.status.error{display:block;background:#f8d7da;color:#842029}.status.warn{display:block;background:#fff3cd;color:#664d03}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.kpi{border:1px solid var(--line);border-radius:16px;background:#fff;padding:16px;box-shadow:0 6px 16px rgba(2,6,23,.04)}.kpi .n{font-size:30px;font-weight:900;letter-spacing:-.04em}.kpi .t{color:var(--muted);font-size:13px;font-weight:800;text-transform:uppercase}.kpi.ok{background:var(--soft-ok)}.kpi.warn{background:var(--soft-warn)}.kpi.blue{background:var(--soft-blue)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;font-size:13px;vertical-align:top}th{background:#f8fafc;font-weight:900;color:#374151;white-space:nowrap}tr:hover td{background:#fafafa}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.quick-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;box-shadow:0 6px 16px rgba(2,6,23,.04)}.quick-card h3{margin:0 0 6px}.quick-card p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.45}
+.hidden{display:none!important}.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:#f8fafc;border:1px solid var(--line);font-size:12px;font-weight:800;color:#334155}
+@media(max-width:980px){.kpi-grid,.grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.span-2,.span-3,.span-4,.span-5,.span-6,.span-8,.span-12{grid-column:span 1}.topbar-inner{align-items:flex-start;flex-direction:column}}
+
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="topbar"><div class="topbar-inner">
+    <div class="brand-wrap"><div class="brand-logo">🐻</div><div class="brand-title"><strong>Maple Bear Jardins · RH</strong><span>Ponto, banco de horas, ações Tangerino e folha</span></div></div>
+    <div class="toolbar" style="margin:0"><a class="btn" href="index.html">↩ Início</a><button class="btn" onclick="(function(){localStorage.removeItem('mb_logged_in');window.location.href='login.html';})()" style="margin-left:auto">Sair</button><a class="btn" href="gestao_rh.html">Gestão RH</a></div>
+  </div></div>
+  <main class="container">
+    <section class="hero"><h1>Gestão RH</h1><p>Central de processos: admissões, ponto, aprovações, banco de horas, ações Tangerino e folha.</p></section>
+    
+<section class="card">
+  <div class="toolbar">
+    <button class="btn blue" type="button" onclick="carregar()">Atualizar painel</button>
+  </div>
+  <div class="kpi-grid" id="kpis"></div>
+  <div id="status-message" class="status"></div>
+</section>
+
+<section class="grid">
+  <article class="quick-card">
+    <h3>📍 Painel de ponto</h3>
+    <p>Veja faltas de marcação, atrasos, saídas antecipadas, horas extras e pendências do dia.</p>
+    <a class="btn blue" href="ponto_painel.html">Abrir painel</a>
+  </article>
+  <article class="quick-card">
+    <h3>🧾 Ocorrências</h3>
+    <p>Fila operacional do RH para registrar justificativas, aprovações e impactos.</p>
+    <a class="btn blue" href="ponto_ocorrencias.html">Abrir ocorrências</a>
+  </article>
+  <article class="quick-card">
+    <h3>✅ Aprovações</h3>
+    <p>Lista para coordenadores aprovarem horas extras, ajustes e justificativas.</p>
+    <a class="btn blue" href="ponto_aprovacoes.html">Abrir aprovações</a>
+  </article>
+  <article class="quick-card">
+    <h3>⏳ Banco de horas</h3>
+    <p>Saldo anual, créditos, débitos e zeragem anual.</p>
+    <a class="btn blue" href="banco_horas.html">Abrir banco</a>
+  </article>
+  <article class="quick-card">
+    <h3>💸 Fechamento folha</h3>
+    <p>Prévia mensal para conferência e envio à contabilidade.</p>
+    <a class="btn blue" href="folha_fechamento.html">Abrir folha</a>
+  </article>
+  <article class="quick-card">
+    <h3>🚀 Admissões</h3>
+    <p>Processo guiado de seleção, cadastro, vínculo, jornada, documentos e revisão.</p>
+    <a class="btn blue" href="admissao.html">Abrir admissões</a>
+  </article>
+</section>
+
+  </main>
+  <script>
+function val(id){ return document.getElementById(id)?.value || ""; }
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.value = v ?? ""; }
+function showMsg(msg, ok=true, type=null){ const el=document.getElementById("status-message"); if(!el) return; el.textContent=typeof msg==="string"?msg:JSON.stringify(msg,null,2); el.className="status " + (type || (ok ? "success":"error")); }
+function clearMsg(){ const el=document.getElementById("status-message"); if(el){ el.textContent=""; el.className="status"; } }
+function extractList(data){ if(Array.isArray(data)) return data; if(data&&typeof data==="object"){ for(const k of ["data","items","rows","result","records","body","output"]){ if(Array.isArray(data[k])) return data[k]; } } return []; }
+async function postJson(url,payload={}){ const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}); const t=await r.text(); let d; try{d=JSON.parse(t)}catch{d=t} if(!r.ok) throw new Error((d&&(d.message||d.error))||t||"Falha"); return d; }
+function fmtMin(min){ const n=Number(min||0); const sign=n<0?"-":""; const a=Math.abs(n); const h=Math.floor(a/60); const m=a%60; return `${sign}${h}h${String(m).padStart(2,"0")}`; }
+function toCSV(rows){ if(!rows.length) return ""; const headers=Object.keys(rows[0]); const esc=v=>{ if(v==null)return ""; const s=String(v).replace(/"/g,'""'); return /[",\n;]/.test(s)?`"${s}"`:s; }; return [headers.join(";"),...rows.map(r=>headers.map(h=>esc(r[h])).join(";"))].join("\n"); }
+function renderTable(rows, tableId="resultado"){ const table=document.getElementById(tableId); if(!table) return; const thead=table.querySelector("thead"); const tbody=table.querySelector("tbody"); if(!rows.length){ thead.innerHTML=""; tbody.innerHTML="<tr><td>Sem dados.</td></tr>"; return; } const headers=Object.keys(rows[0]); thead.innerHTML="<tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"</tr>"; tbody.innerHTML=rows.map(r=>"<tr>"+headers.map(h=>`<td>${r[h] ?? ""}</td>`).join("")+"</tr>").join(""); }
+function setCsv(rows, filename){ const a=document.getElementById("csvBtn"); if(!a) return; if(!rows.length){ a.classList.add("hidden"); return; } a.href=URL.createObjectURL(new Blob([toCSV(rows)],{type:"text/csv;charset=utf-8;"})); a.download=filename; a.classList.remove("hidden"); }
+</script>
+  <script>
+const DASH = "https://webhook.maplebearjardins.pro/webhook/rh_gestao_dashboard_001";
+function card(t,n,cls=""){ return `<div class="kpi ${cls}"><div class="n">${n}</div><div class="t">${t}</div></div>`; }
+async function carregar(){
+  clearMsg();
+  try{
+    const data = await postJson(DASH, {});
+    const d = Array.isArray(data) ? data[0] : (extractList(data)[0] || data);
+    document.getElementById("kpis").innerHTML =
+      card("Admissões abertas", d.admissoes_abertas, "blue") +
+      card("Pendências de ponto", d.ponto_pendencias, d.ponto_pendencias>0?"warn":"ok") +
+      card("Aguardando coordenador", d.aguardando_coordenador, d.aguardando_coordenador>0?"warn":"ok") +
+      card("Ações Tangerino pendentes", d.acoes_tangerino_pendentes, d.acoes_tangerino_pendentes>0?"warn":"ok") +
+      card("Banco horas total", fmtMin(d.saldo_banco_horas_total_min), "blue") +
+      card("Folhas abertas", d.folhas_abertas, d.folhas_abertas>0?"warn":"ok");
+    showMsg("Painel atualizado.", true);
+  }catch(e){ showMsg(e.message,false); }
+}
+document.addEventListener("DOMContentLoaded", carregar);
+</script>
+
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

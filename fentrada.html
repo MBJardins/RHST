@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forms · ENTRADA</title>
+  <style>
+    :root{
+      --brand:#1a73e8; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --bg:#f6f7fb; --card:#ffffff; --shadow:0 8px 24px rgba(2,6,23,.06);
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial; background:#f6f7fb; color:#111827; }
+    .container{ max-width:1200px; margin:28px auto 40px; padding:0 16px; }
+    header h1{ display:flex; gap:10px; align-items:center; font-weight:900; letter-spacing:.2px; font-size:clamp(26px,4.5vw,40px); margin:0 0 8px; }
+    header h1 .ico{ width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:#e9f0fe; color:#1a73e8; font-size:24px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow); }
+    a.btn, button.btn, select{ appearance:none; border:1px solid var(--line); background:#eef2f7; padding:10px 14px; border-radius:12px; font-size:15px; color:#111827; text-decoration:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer; transition:transform .02s ease, background .15s ease; }
+    button.btn:hover, a.btn:hover{ background:#e3e9f2 } button.btn:active, a.btn:active{ transform:translateY(1px) }
+    .btn.primary{ background:linear-gradient(180deg,#2a85ff,#1a73e8); color:#fff; border:none; box-shadow:0 8px 18px rgba(26,115,232,.25) }
+    .sp{ flex:1 }
+    .muted{ color:#6b7280; font-size:13px }
+    #status{ margin-top:8px; color:#374151; font-size:14px }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
+    .checks-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px }
+    .checks{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:8px }
+    .checks label{ display:flex; gap:8px; align-items:center; border:1px dashed #e5e7eb; border-radius:10px; padding:8px 10px; background:#fff }
+
+    /* Impressão A4 */
+    .scaler{ transform-origin: top left; display:inline-block }
+    @media print{
+      html,body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pwrap{ padding:0 !important }
+      .page{ box-shadow:none !important; margin:0 !important; width:210mm; height:297mm;
+             page-break-after: always; break-after: page; }
+      .page:last-child, .page:last-of-type{ page-break-after: auto; break-after: auto; }
+    }
+
+    /* Estilos específicos de páginas */
+    .page-ficha .inner, .page-checklist .inner { font-family:"Times New Roman",Times,serif; color:#000; }
+    .page-ficha .title, .page-checklist .title { font-weight:bold; text-align:center; }
+    .page-ficha .inner { font-size:10pt; padding:8mm 12mm; }
+    .page-ficha .title { font-size:14pt; margin-bottom:5mm; }
+    .page-ficha .photo-container{ width:35mm;height:45mm;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9pt;color:#999;margin:0 auto 8mm; }
+    .page-ficha .photo-container img{ width:100%;height:100%;object-fit:cover; }
+
+    .fc .sec{ font-weight:bold; font-size:11pt; margin:5mm 0 2mm; border-bottom:1px solid #ccc; padding-bottom:1mm; }
+
+.fc .line{ display:flex; flex-wrap:nowrap; align-items:flex-end; margin:2.2mm 0; gap:4mm; }
+.fc .cell{ display:flex; align-items:baseline; white-space:nowrap; }
+.fc .lab{ font-weight:bold; margin-right:2mm; }
+.fc .val{ padding:0 1mm .5mm; border-bottom:.5pt solid #000; min-height:5mm; flex-grow:1; }
+
+    .fc .flex{ flex:1 }
+    .fc .w-10{width:10mm}.fc .w-15{width:15mm}.fc .w-20{width:20mm}.fc .w-25{width:25mm}.fc .w-30{width:30mm}.fc .w-35{width:35mm}
+.fc .w-18{width:18mm}
+.fc .w-22{width:22mm}
+.fc .w-28{width:28mm}
+.fc .w-32{width:32mm}
+.fc .w-38{width:38mm}
+    .fc .w-40{width:40mm}.fc .w-45{width:45mm}.fc .w-50{width:50mm}.fc .w-55{width:55mm}.fc .w-60{width:60mm}.fc .w-65{width:65mm}
+    .fc .w-70{width:70mm}.fc .w-75{width:75mm}.fc .w-80{width:80mm}.fc .w-full{width:100%}
+
+    /* Tema do conteúdo no popup */
+    .inner{ padding:10mm 15mm 12mm; font-size:12pt; line-height:1.35 }
+    .title{ font-weight:900; font-size:14pt; margin:2mm 0 3mm; text-transform:none }
+    .subtitle{ color:#374151; font-size:10.5pt; margin:0 0 5mm; font-weight:700 }
+    .row{ display:flex; gap:8mm; margin:2.5mm 0 }
+    .lab{ width:55mm; color:#111827 }
+    .val{ flex:1; border-bottom:1px solid #111827; min-height:6mm; }
+    .val.pad{ padding:0 2mm 1mm }
+    .signature{ display:flex; gap:15mm; margin-top:14mm; align-items:center }
+    .sigline{ flex:1; border-top:1px solid #111827; text-align:center; padding-top:3mm; font-size:10.5pt }
+    .checkgrid{ display:grid; grid-template-columns:repeat(2,1fr); column-gap:18mm; row-gap:5mm; margin-top:3mm }
+    .checkitem{ display:flex; gap:4mm; align-items:center }
+    .box{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; }
+    .p{ font-size:12pt; line-height:1.45; margin:0 0 3mm; text-align:justify }
+    .mb{ font-weight:900 }
+    .rad{ display:inline-block; width:10pt; height:10pt; border:1.2pt solid #111; border-radius:50%; margin:0 5pt 0 0; vertical-align:middle }
+    .list{ margin:2mm 0 2mm 6mm }
+    .list li{ margin:1mm 0 }
+    .page.page-checklist .header{height:22mm}
+    .page.page-checklist .inner{ font-size:11pt; line-height:1.28; padding:8mm 14mm 9mm; }
+    .page.page-checklist .title{ font-size:13pt; margin:1mm 0 1.2mm; text-transform:uppercase }
+
+    /* ===== AJUSTE: Checklist em duas colunas ===== */
+    .page.page-checklist .panel{
+      width:100%;
+      border:1px solid #9ca3af;
+      padding:3.2mm 5mm;
+      margin-top:1.5mm;
+
+      display:grid;
+      grid-template-columns: 1fr 1fr; /* duas colunas */
+      column-gap:10mm;
+      row-gap:2.5mm;
+    }
+    .page.page-checklist .panel .shead{
+      grid-column: 1 / -1;            /* ocupa a largura total */
+      font-weight:bold;
+      margin-top:2mm;
+    }
+    .page.page-checklist .ck{ display:flex; align-items:flex-start; gap:3mm; }
+    .page.page-checklist .ck .b{ width:9pt;height:9pt;box-sizing:border-box;border:1.2pt solid #c53030;border-radius:2px; }
+  
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="container">
+    <header>
+      <h1><span class="ico">🖨️</span> Forms · ENTRADA</h1>
+      <div class="row"><a class="btn" href="index.html">↩️ Retornar ao início</a></div>
+      <div class="muted">Os relatórios são gerados em pop-up A4 com o <b>cabeçalho oficial</b> (arquivo <code>cabecalho.png</code> na mesma pasta do HTML).</div>
+    </header>
+
+    <section class="card">
+      <div class="grid">
+        <div>
+          <div class="row">
+            <label class="muted">Nome:</label>
+            <select id="sel-nome"><option value="">Selecione um nome</option></select>
+            <button class="btn primary" id="btn-gerar">🔄 Gerar relatórios</button>
+            <div class="sp"></div>
+          </div>
+          <div id="status">Aguardando seleção…</div>
+        </div>
+        <div>
+          <div class="checks-head">
+            <div class="muted">Selecionar relatórios:</div>
+            <button class="btn" id="btn-toggle">☑ Marcar todos</button>
+          </div>
+          <div class="checks" id="checks"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+// ======================= ENDPOINTS =======================
+const URL_LISTA_NOMES = "https://webhook.maplebearjardins.pro/webhook/e1fb46c9-bc88-4de1-96f2-a83a5370d101";
+const URL_ENTRADA     = "https://webhook.maplebearjardins.pro/webhook/72950248-d00d-4a41-8311-fa9dddef1a9e";
+
+// ======================= ELEMENTOS =======================
+const selNome = document.getElementById('sel-nome');
+const btnGerar = document.getElementById('btn-gerar');
+const statusEl = document.getElementById('status');
+const checksWrap = document.getElementById('checks');
+const btnToggle = document.getElementById('btn-toggle');
+
+// ======================= HELPERS =======================
+const norm = s => String(s||"").trim().toLowerCase();
+const onlyDigits = s => String(s||"").replace(/\D/g,"");
+function toArray(x){ if(Array.isArray(x)) return x; if(x && Array.isArray(x.data)) return x.data; if(x && Array.isArray(x.body)) return x.body; if(x && typeof x==='object') return [x]; return []; }
+function pick(obj, keys){
+  if (!obj) return undefined;
+  const map = Object.fromEntries(Object.keys(obj).map(k=>[norm(k), k]));
+  for (const k of keys){ const hit = map[norm(k)]; if (hit) return obj[hit]; }
+  for (const k in obj){ const nk = norm(k); if (keys.some(w => nk.includes(norm(w)))) return obj[k]; }
+  return undefined;
+}
+function getFromMany(arr, keys){
+  for (const o of arr){ const v = pick(o, keys); if (v!==undefined && String(v).trim()!=="") return v; }
+  return "";
+}
+function formatCPF(v){ const s = onlyDigits(v).slice(0,11); return s.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2"); }
+function formatCEP(v){ const s = onlyDigits(v).slice(0,8); return s.replace(/(\d{5})(\d{1,3})$/,"$1-$2"); }
+function formatTel(v){ const s = onlyDigits(v||""); if (!s) return ""; if (s.length<=10) return s.replace(/(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3"); return s.replace(/(\d{2})(\d{5})(\d{0,4})/,"($1) $2-$3"); }
+function fmtDate(x){ const s=String(x||""); const m=s.match(/(\d{4})[\/\-\.\s](\d{2})[\/\-\.\s](\d{2})/); if(m) return `${m[3]}/${m[2]}/${m[1]}`; const m2=s.match(/(\d{2})[\/\-\.\s](\d{2})[\/\-\.\s](\d{4})/); if(m2) return `${m2[1]}/${m2[2]}/${m2[3]}`; const d=new Date(s); if(!isNaN(d) && s) return d.toLocaleDateString('pt-BR',{timeZone:'UTC'}); return s; }
+function fmtDateLong(d=new Date(), cidade="São Paulo"){ const ds = d.toLocaleDateString('pt-BR',{ weekday:'long', day:'2-digit', month:'long', year:'numeric' }); return `${cidade}, ${ds}`; }
+function boolBox(val){ const s=String(val||"").trim().toLowerCase(); const yes=["1","true","t","y","yes","sim","x","✓","check","checked"]; return yes.includes(s)?"☑":"☐"; }
+function v(val, blank="&nbsp;"){ return (String(val||"").trim()||blank); }
+function compEndereco(d){
+  const end  = getFromMany(d,["endereço","endereco","logouro"]);
+  const num  = getFromMany(d,["nº","numero","número"]);
+  const compl= getFromMany(d,["complemento"]);
+  const bairro=getFromMany(d,["bairro"]);
+  const cidade=getFromMany(d,["cidade"]);
+  const uf    =getFromMany(d,["estado","uf"]);
+  const cep   =formatCEP(getFromMany(d,["cep"]));
+  const partes = [];
+  if (end) partes.push(end);
+  if (num) partes.push("nº " + num);
+  if (compl) partes.push(compl);
+  if (bairro) partes.push("Bairro " + bairro);
+  if (cidade || uf) partes.push([cidade, uf].filter(Boolean).join("/"));
+  if (cep) partes.push("CEP " + cep);
+  return partes.join(", ");
+}
+
+// ======================= POPUP A4 + FILA =======================
+let pop=null;
+let renderQueue = Promise.resolve(); // fila para abrir várias páginas em sequência
+
+function openPopup(title){
+  if (!pop || pop.closed){
+    pop = window.open('about:blank','_blank','width=1100,height=800');
+    if(!pop){ alert('Pop-up bloqueado. Libere pop-ups para este site.'); return null; }
+  }
+  const style = `
+    body{margin:0;font-family:"Times New Roman", Georgia, serif;background:#fff;color:#111827}
+    .pwrap{padding:0 0 12px}
+    .page{width:210mm;height:297mm;margin:0 auto 10mm;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.06);position:relative;overflow:hidden;display:block}
+    .header{height:25mm;border-bottom:1px solid #d1d5db;display:flex;align-items:flex-end;background:#fff}
+    .header img{width:100%;height:100%;object-fit:cover}
+    .inner{ padding:10mm 15mm 12mm; font-size:12pt; line-height:1.35 }
+    .title{ font-weight:900; font-size:14pt; margin:2mm 0 3mm; text-transform:none }
+    .subtitle{ color:#374151; font-size:10.5pt; margin:0 0 5mm; font-weight:700 }
+    .row{ display:flex; gap:8mm; margin:2.5mm 0 }
+    .lab{ width:55mm; color:#111827 }
+    .val{ flex:1; border-bottom:1px solid #111827; min-height:6mm; }
+    .val.pad{ padding:0 2mm 1mm }
+    .signature{ display:flex; gap:15mm; margin-top:14mm; align-items:center }
+    .sigline{ flex:1; border-top:1px solid #111827; text-align:center; padding-top:3mm; font-size:10.5pt }
+    .checkgrid{ display:grid; grid-template-columns:repeat(2,1fr); column-gap:18mm; row-gap:5mm; margin-top:3mm }
+    .checkitem{ display:flex; gap:4mm; align-items:center }
+    .box{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; }
+    .p{ font-size:12pt; line-height:1.45; margin:0 0 3mm; text-align:justify }
+    .mb{ font-weight:900 }
+    .rad{ display:inline-block; width:10pt; height:10pt; border:1.2pt solid #111; border-radius:50%; margin:0 5pt 0 0; vertical-align:middle }
+    .list{ margin:2mm 0 2mm 6mm }
+    .list li{ margin:1mm 0 }
+    .page.page-checklist .header{height:22mm}
+    .page.page-checklist .inner{ font-size:11pt; line-height:1.28; padding:8mm 14mm 9mm; }
+    .page.page-checklist .title{ font-size:13pt; margin:1mm 0 1.2mm; text-transform:uppercase }
+    /* Mantém o mesmo CSS do <head> para o popup */
+    .page.page-checklist .panel{
+      width:100%;
+      border:1px solid #9ca3af;
+      padding:3.2mm 5mm;
+      margin-top:1.5mm;
+
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap:10mm;
+      row-gap:2.5mm;
+    }
+    .page.page-checklist .panel .shead{
+      grid-column: 1 / -1;
+      font-weight:bold;
+      margin-top:2mm;
+    }
+    .page.page-checklist .ck{ display:flex; align-items:flex-start; gap:3mm; }
+    .page.page-checklist .ck .b{ width:9pt;height:9pt;box-sizing:border-box;border:1.2pt solid #c53030;border-radius:2px; }
+    .scaler{ transform-origin: top left; display:inline-block }
+    @media print{
+      html,body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pwrap{ padding:0 !important }
+      .page{ box-shadow:none !important; margin:0 !important; width:210mm; height:297mm;
+             page-break-after: always; break-after: page; }
+      .page:last-child, .page:last-of-type{ page-break-after: auto; break-after: auto; }
+    }
+  `;
+  pop.document.open();
+  pop.document.write(`<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>${title}</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>${document.head.querySelector('style').innerHTML}${style}</style></head><body><div class="pwrap" id="pwrap"></div>
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body></html>`);
+  pop.document.close();
+  return pop;
+}
+
+// addPage com FILA + autoscale robusto
+function addPage(html, cls = ""){
+  renderQueue = renderQueue.then(() => new Promise((resolve) => {
+    if (!pop || pop.closed) { resolve(); return; }
+
+    const pwrap = pop.document.getElementById('pwrap');
+    const page = pop.document.createElement('div');
+    page.className = 'page' + (cls?` ${cls}`:'');
+    page.innerHTML = `
+      <div class="header"><img src="cabecalho.png" alt="Cabeçalho" onerror="this.style.display='none'"></div>
+      <div class="inner">${html}</div>
+    `;
+    pwrap.appendChild(page);
+
+    const safeScale = () => {
+      try{
+        const header = page.querySelector('.header');
+        const inner  = page.querySelector('.inner');
+        const scaler = page.querySelector('.scaler');
+        if (inner && scaler){
+          const pageH   = page.offsetHeight;
+          const headerH = header ? header.getBoundingClientRect().height : 0;
+          const avail   = pageH - headerH - 2;
+          const need    = inner.scrollHeight;
+          if (need > 0 && avail > 0){
+            const scale = Math.min(1, avail / need);
+            if (scale < 1){
+              const rectW = inner.getBoundingClientRect().width;
+              scaler.style.transform = `scale(${scale})`;
+              scaler.style.width = (rectW / scale) + 'px';
+            }
+          }
+        }
+      }catch(e){ console.warn('Autoscale falhou:', e); }
+      finally{ resolve(); }
+    };
+
+    const img = page.querySelector('.header img');
+    if (img && !img.complete){
+      img.addEventListener('load', () => requestAnimationFrame(safeScale), { once:true });
+      img.addEventListener('error', () => requestAnimationFrame(safeScale), { once:true });
+      setTimeout(() => requestAnimationFrame(safeScale), 250); // fallback
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(safeScale));
+    }
+  })).catch(e => console.error('Falha ao adicionar página:', e));
+}
+
+// ======================= DOCS =======================
+const DOCS = [
+  { id: "1",  label: "Imagem — MB Jardins" },
+  { id: "2",  label: "Imagem — Bear Chef" },
+  { id: "3",  label: "Carta de abertura de conta" },
+  { id: "8",  label: "Termos de Confidencialidade (Sumário)" },
+  { id: "9",  label: "Checklist de Contratação" },
+  { id: "10", label: "Ficha cadastral" },
+  { id: "11", label: "Termo de Confidencialidade — MB Jardins" },
+  { id: "12", label: "Crachá (pré-visualização)" },
+  { id: "13", label: "Termo de Confidencialidade — MB Central" },
+  { id: "14", label: "Termo de Confidencialidade — Bear Chef" },
+  { id: "15", label: "Carta Seguro (Estagiário)" },
+  { id: "16", label: "Termo de Confidencialidade — ST Educação" },
+];
+function buildChecks(){
+  checksWrap.innerHTML = "";
+  for (const d of DOCS){
+    const id = `chk_${d.id}`;
+    const el = document.createElement('label');
+    el.innerHTML = `<input type="checkbox" id="${id}"> ${d.label}`;
+    checksWrap.appendChild(el);
+  }
+  btnToggle.textContent = "☑ Marcar todos";
+}
+function selectedDocIds(){
+  const ids = [];
+  for (const d of DOCS){
+    const el = document.getElementById(`chk_${d.id}`);
+    if (el && el.checked) ids.push(d.id);
+  }
+  return ids;
+}
+function toggleAll(){
+  const boxes = DOCS.map(d => document.getElementById(`chk_${d.id}`)).filter(Boolean);
+  const allChecked = boxes.every(b => b.checked);
+  boxes.forEach(b => b.checked = !allChecked);
+  btnToggle.textContent = allChecked ? "☑ Marcar todos" : "☐ Desmarcar todos";
+}
+
+// ======================= RENDERERS =======================
+function L(label, val){ return `<div class="row"><div class="lab">${label}</div><div class="val pad">${v(val)}</div></div>`; }
+
+// (1) Imagem MB Jardins
+function pageImagemMBJardins(d){
+  const nome = getFromMany(d,["nome","colaborador"]);
+  const cidade = getFromMany(d,["cidade"]) || "São Paulo";
+  const data = fmtDateLong(new Date(), cidade);
+  return `
+    <div class="title" style="text-align:center">AUTORIZAÇÃO DE USO DE IMAGEM — MAPLE BEAR JARDINS</div>
+    <p class="p">Eu, <b>${v(nome)}</b>, autorizo, de forma gratuita, o uso da minha imagem em materiais institucionais da Maple Bear, para fins de divulgação interna e externa, em qualquer mídia e por prazo indeterminado.</p>
+    <div class="signature" style="margin-top:18mm">
+      <div class="sigline">${v(nome,"Assinatura")}</div>
+      <div>${data}</div>
+    </div>
+  `;
+}
+
+// (2) Imagem Bear Chef
+function pageImagemBearChef(d){
+  const nome = getFromMany(d,["nome","colaborador"]) || "";
+  return `
+    <div class="title">FORMULÁRIO DE IMAGEM DO COLABORADOR</div>
+    <p class="p">A <span class="mb">Bear Chef</span> solicita a autorização para a sua participação nas filmagens e fotos que serão utilizadas para a divulgação institucional do Programa.</p>
+    <p class="p">Por gentileza, preencham o “de acordo” que segue abaixo.</p>
+    <div class="p" style="margin-top:12mm"><span class="mb">BEAR CHEF</span></div>
+    <p class="p">Eu <b>${v(nome)}</b>, autorizo a reprodução da minha imagem na filmagem e foto para a divulgação institucional da escola.</p>
+    <div style="display:flex; gap:16mm; margin-top:6mm">
+      <div><span class="rad"></span> SIM AUTORIZO</div>
+      <div><span class="rad"></span> NÃO AUTORIZO</div>
+    </div>
+    <div class="signature" style="margin-top:22mm">
+      <div class="sigline">Assinatura</div>
+      <div class="sigline" style="max-width:40mm">Data</div>
+    </div>
+  `;
+}
+
+// (3) Carta de abertura de conta
+function pageCartaBanco(d){
+  const cidade = getFromMany(d, ["cidade"]) || "São Paulo";
+  const dataTop = fmtDate(new Date());
+  const nome = getFromMany(d, ["nome","colaborador"]);
+  const rg = getFromMany(d, ["rg","carteira de identidade"]);
+  const orgao = getFromMany(d, ["órgão emissor","orgao emissor","orgao_emissor"]);
+  const cpf = formatCPF(getFromMany(d, ["cpf"]));
+  const end = getFromMany(d, ["endereço","endereco","logouro"]);
+  const num = getFromMany(d, ["nº","numero","número"]);
+  const cep = formatCEP(getFromMany(d, ["cep"]));
+  const compl = getFromMany(d, ["complemento"]);
+  const cargo = getFromMany(d, ["cargo","funcao","função"]);
+  const adm = fmtDate(getFromMany(d, ["data admissão","data admissao","admissao","admissão","data de admissão"]));
+  const sal = getFromMany(d, ["renda mensal","salário","salario","remuneração","remuneracao"]);
+  const tel = formatTel(getFromMany(d, ["telefone","tel","celular"]));
+  const email = getFromMany(d, ["email","e-mail"]);
+  return `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6mm">
+      <div>${v(cidade)}, ${dataTop}</div>
+      <div>Agência Santander</div>
+    </div>
+    <p class="p">Prezados(as),</p>
+    <p class="p">Solicitamos a abertura de conta corrente para o(a) colaborador(a) <b>${v(nome)}</b>, RG <b>${v(rg,"____")}</b> (${v(orgao,"____")}), CPF <b>${v(cpf,"____")}</b>, residente à <b>${v(end,"____")}</b>, nº <b>${v(num,"__")}</b>, CEP <b>${v(cep,"________")}</b>${compl?(" – "+compl):""}. O(a) colaborador(a) exercerá a função de <b>${v((cargo||"").toUpperCase(),"____")}</b>, com admissão em <b>${v(adm,"____")}</b> e remuneração mensal de <b>${v(sal,"____")}</b>.</p>
+    <p class="p">Contato: ${v(tel,"__________")} · ${v(email,"__________")}</p>
+    <div class="signature" style="margin-top:18mm">
+      <div class="sigline">Assinatura do Responsável</div>
+    </div>
+  `;
+}
+
+// (8) Termos — Sumário
+function pageTermosSumario(d){
+  const linhas = [
+    ["MB Central", getFromMany(d,["t_mbcentral","termo mb central","mb central"])],
+    ["MB Jardins", getFromMany(d,["t_mbjardins","termo mb jardins","mb jardins"])],
+    ["Bear Chef", getFromMany(d,["t_bearchef","termo bear chef","bear chef"])]
+  ];
+  return `
+    <div class="title">TERMOS DE CONFIDENCIALIDADE</div>
+    <div class="checkgrid">
+      ${linhas.map(([label,val])=>`<div class="checkitem"><span class="box">${boolBox(val)}</span> <span>${label}</span></div>`).join("")}
+    </div>
+  `;
+}
+
+// (9) Checklist — AJUSTADO PARA DUAS COLUNAS
+function pageChecklist(d){
+  const nome = getFromMany(d, ["nome", "colaborador"]);
+  const cargo = getFromMany(d, ["cargo", "funcao", "função"]);
+
+  const ck = (txt) => `
+    <div class="ck">
+      <span class="b"></span>
+      <span>${txt}</span>
+    </div>
+  `;
+
+  return `
+    <div class="title">CHECK LIST DE CONTRATAÇÃO</div>
+
+    <div style="margin-bottom:3mm;"><b>Nome:</b> ${v(nome)}</div>
+    <div style="margin-bottom:3mm;"><b>Cargo:</b> ${v(cargo)}</div>
+    <div style="margin-bottom:2mm;"><b>Informações:</b></div>
+
+    <div class="panel">
+      <div class="shead">Preenchimento do formulário</div>
+      ${ck("Impressão")}
+      ${ck("Criar pasta arquivo")}
+
+      <div class="shead">DOCUMENTOS NECESSÁRIOS PARA CONTRATAÇÃO</div>
+      ${ck("Carteira de trabalho")}
+      ${ck("RG e CPF")}
+      ${ck("Título de eleitor")}
+      ${ck("Certidão de casamento ou nascimento")}
+      ${ck("1 foto 3x4")}
+      ${ck("Certidão de nascimento dos filhos")}
+      ${ck("Carteira de vacinação (filhos até 7 anos)")}
+      ${ck("Comprovante de residência (água, luz, etc.)")}
+      ${ck("Histórico escolar do ensino médio")}
+      ${ck("Certificado de inglês")}
+      ${ck("Comprovante da faculdade")}
+
+      <div class="shead">Exame médico</div>
+      ${ck("Agendado")}
+      ${ck("Realizado")}
+
+      <div class="shead">Termo de confidencialidade</div>
+      ${ck("MB Central")}
+      ${ck("MB Jardins")}
+
+      <div class="shead">Procedimentos e cadastros</div>
+      ${ck("Carta de uso de imagem")}
+      ${ck("Carta de seguro — enviada")}
+      ${ck("Impressão do crachá")}
+      ${ck("Formulário de janela")}
+      ${ck("Cadastro de foto de crachá")}
+      ${ck("Uniforme")}
+      ${ck("TotalPass")}
+      ${ck("Cadastro de acesso (catracas)")}
+      ${ck("Incluir número de WhatsApp")}
+      ${ck("Certidão de antecedentes criminais")}
+      ${ck("Envio para a faculdade")}
+      ${ck("Cadastro médico")}
+      ${ck("Treinamento inicial")}
+      ${ck("Contato de estágio")}
+      ${ck("Apresentação da escola e funcionários")}
+      ${ck("Colar informações na carteira de trabalho")}
+      ${ck("Guia da família")}
+      ${ck("Criação de e-mail institucional")}
+      ${ck("Acordo de horas extras")}
+    </div>
+  `;
+}
+// (10) Ficha cadastral — Pg1
+function pageFichaCadastralPg1(d){
+  const C=(lab,val,w='flex')=>`<div class="cell ${w}"><span class="lab">${lab}</span><span class="val">${v(val)}</span></div>`;
+  const Ln=(...cells)=>`<div class="line">${cells.join("")}</div>`;
+  const foto=getFromMany(d,["foto_url","foto"]);
+  const nome=getFromMany(d,["nome","colaborador"]);
+  const empresa=getFromMany(d,["empresa"])||"Ass. Ed. Canadense de SP";
+  const nomeCracha=(getFromMany(d,["nome cracha","nome_cracha"])||"").toUpperCase();
+  const sobrenCra=(getFromMany(d,["sobrenome cracha","sobrenome_cracha"])||"").toUpperCase();
+  const nasc=fmtDate(getFromMany(d,["data nascimento","nascimento","data nas"]));
+  const log=getFromMany(d,["endereço","endereco","logouro"]);
+  const num=getFromMany(d,["nº","numero","número"]);
+  const compl=getFromMany(d,["complemento"]);
+  const cep=formatCEP(getFromMany(d,["cep"]));
+  const bairro=getFromMany(d,["bairro"]);
+  const cidade=getFromMany(d,["cidade"]);
+  const uf=getFromMany(d,["estado","uf"]);
+  const tel=formatTel(getFromMany(d,["telefone"]));
+  const cel=formatTel(getFromMany(d,["celular"]));
+  const email=getFromMany(d,["email","e-mail"]);
+  const sexo=getFromMany(d,["sexo"]);
+const corPele=getFromMany(d,["cor da pele","cor","etnia"]);
+  const estCiv=getFromMany(d,["estado civil"]);
+  const nac=getFromMany(d,["nacionalidade"]);
+  const natu=getFromMany(d,["naturalidade"]);
+  const filiPai=getFromMany(d,["filiação pai","filiacao pai","pai"]);
+  const filiMae=getFromMany(d,["filiação mãe","filiacao mae","mãe","mae"]);
+  const conjuge=getFromMany(d,["cônjuge","conjuge"]);
+  const dep=getFromMany(d,["nº dependentes","num dependentes","dependentes"]);
+  const filho1=getFromMany(d,["filho 1 nome","filho1 nome","filho1"]);
+  const filho1n=fmtDate(getFromMany(d,["filho 1 nascimento","filho1 nascimento","nascimento filho 1"]));
+  const filho2=getFromMany(d,["filho 2 nome","filho2 nome","filho2"]);
+  const filho2n=fmtDate(getFromMany(d,["filho 2 nascimento","filho2 nascimento","nascimento filho 2"]));
+  const grau=getFromMany(d,["grau de instrução","escolaridade","formação","formacao"]);
+  const valeVT=getFromMany(d,["vale transporte","vt"]);
+  const segSaude=getFromMany(d,["seguro saúde","plano de saúde","plano saude"]);
+  const refeicao=getFromMany(d,["refeicao","vale refeição","vale refeicao"]);
+  const rg=getFromMany(d,["rg","carteira de identidade"]);
+  const orgao=getFromMany(d,["órgão emissor","orgao emissor","orgao_emissor"]);
+  const dataRG=fmtDate(getFromMany(d,["data emissão rg","data emissao rg","data emissão","data emissao"]));
+  const cpf=formatCPF(getFromMany(d,["cpf"]));
+  const pis=getFromMany(d,["pis","pasep","pis/pasep"]);
+  const certMil=getFromMany(d,["certificado militar","cert militar"]);
+  const ctps=getFromMany(d,["ctps","ctps digital"]);
+  const serie=getFromMany(d,["série","serie"]);
+  const titulo=getFromMany(d,["título de eleitor","titulo eleitor","titulo de eleitor"]);
+  const secao=getFromMany(d,["seção","secao"]);
+  const zona=getFromMany(d,["zona"]);
+  const cargo=getFromMany(d,["cargo","Cargo"]);
+  const horario=getFromMany(d,["horário","horario"]);
+  const bonus=getFromMany(d,["cargo_Bonus"]);
+const salario=getFromMany(d,["cargo_Salario"]);
+  const nCarteirSa=getFromMany(d,["n carteirinha p saude","carteirinha plano","numero carteirinha"]);
+  const fotoHtml=foto?`<img src="${foto}" alt="Foto do funcionário">`:"Foto 3x4";
+  const formContent=`
+    <div class="fc-main-content">
+      <div class="title">Ficha cadastral do funcionário</div>
+      <div class="fc">
+        ${Ln(C("Empresa",empresa,"w-60"),C("Nome",nome,"flex"))}
+        ${Ln(C("Nome do cracha",nomeCracha,"w-45"),C("Sobrenome do cracha",sobrenCra,"w-45"),C("Data Nascimento",nasc,"flex"))}
+        ${Ln(C("Endereço",log,"w-80"),C("N°",num,"w-20"),C("Compl.",compl,"flex"))}
+        ${Ln(C("Cep",cep,"w-25"),C("Bairro",bairro,"w-45"),C("Cidade",cidade,"w-45"),C("Estado",uf,"flex"))}
+        ${Ln(C("Telefone",tel,"w-40"),C("Celular",cel,"w-40"),C("E-mail",email,"flex"))}
+${Ln(
+  C("Sexo",sexo,"w-30"),
+  C("Cor da pele",corPele,"w-35"),
+  C("Estado Civil",estCiv,"flex")
+)}
+${Ln(
+  C("Nacionalidade",nac,"w-50"),
+  C("Naturalidade",natu,"flex")
+)}
+        ${Ln(C("Filiação Pai",filiPai,"w-full"))}
+        ${Ln(C("Filiação Mãe",filiMae,"w-full"))}
+        ${Ln(C("Cônjuge",conjuge,"flex"),C("Nº Dependentes",dep,"w-40"))}
+        ${Ln(C("Filhos - Nome1",filho1,"flex"),C("Data Nas F1",filho1n,"w-40"))}
+        ${Ln(C("Filhos - Nome2",filho2,"flex"),C("Data Nas F2",filho2n,"w-40"))}
+        ${Ln(C("Grau de Instrução",grau,"flex"),C("Vale Transporte",valeVT,"w-60"))}
+        ${Ln(C("seguro saúde",segSaude,"w-60"),C("refeicao",refeicao,"flex"))}
+
+        <div class="sec">Documentação</div>
+${Ln(
+  C("Carteira de Identidade",rg,"w-60"),
+  C("Órgão Emissor",orgao,"flex")
+)}
+${Ln(
+  C("Data Emissão",dataRG,"w-40")
+)}
+${Ln(C("CPF",cpf,"w-32"),C("PIS/PASEP",pis,"flex"))}
+        ${Ln(C("Cert Militar",certMil,"w-50"),C("CTPS Digital",ctps,"w-40"),C("Série",serie,"flex"))}
+        ${Ln(C("Título de Eleitor",titulo,"w-70"),C("Seção",secao,"w-25"),C("Zona",zona,"flex"))}
+
+        <div class="sec">Dados da Contratação</div>
+        ${Ln(C("cargo",cargo,"w-full"))}
+${Ln(
+  C("Horário",horario,"w-60"),
+  C("Salário",salario,"w-35"),
+  C("Bonus",bonus,"flex")
+)}
+        ${Ln(C("n carteirinha p saude",nCarteirSa,"w-full"))}
+      </div>
+    </div>`;
+  return `<div class="photo-container">${fotoHtml}</div>`+formContent;
+}
+
+// (10) Ficha cadastral — Pg2
+function pageFichaCadastralPg2(d){
+  const C=(lab,val,w='flex')=>`<div class="cell ${w}"><span class="lab">${lab}</span><span class="val">${v(val)}</span></div>`;
+  const Ln=(...cells)=>`<div class="line">${cells.join("")}</div>`;
+  const adm=fmtDate(getFromMany(d,["data admissão","data admissao","admissao","admissão"]));
+  const deslig=fmtDate(getFromMany(d,["data desligamento"]));
+  const banco=getFromMany(d,["banco"]);
+  const agencia=getFromMany(d,["agência","agencia"]);
+  const conta=getFromMany(d,["conta","nta"]);
+  const tipoCta=getFromMany(d,["tipo de conta","tp conta"]);
+  const instRaz=getFromMany(d,["inst ensino razão social","instituição razão social","instituicao razao social","faculdade"]);
+  const instEnd=getFromMany(d,["inst ensino endereço","endereço instituição","endereco instituicao"]);
+  const instBai=getFromMany(d,["inst ensino bairro","bairro instituição"]);
+  const instCid=getFromMany(d,["inst ensino cidade","cidade instituição"]);
+  const instCep=formatCEP(getFromMany(d,["inst ensino cep","cep instituição"]));
+  const instEst=getFromMany(d,["inst ensino estado","uf instituição"]);
+  const curso=getFromMany(d,["curso","nome do curso"]);
+  const matric=getFromMany(d,["número da matrícula","numero da matricula","matricula"]);
+  const nivelM=getFromMany(d,["nível médio","nivel medio"]);
+  const nivelS=getFromMany(d,["nível superior","nivel superior","Nível"]);
+  const periodo=getFromMany(d,["período","periodo"]);
+  const anoSem=getFromMany(d,["ano / semestre","ano semestre","semestre"]);
+  return `
+    <div class="fc" style="width:100%">
+      <div class="sec">Dados Bancários</div>
+      ${Ln(C("Banco",banco,"w-50"),C("Agência",agencia,"w-35"),C("Conta",conta,"w-35"),C("Tipo de Conta",tipoCta,"flex"))}
+
+      <div class="sec">Dados básicos para emissão de contrato de estágio</div>
+      ${Ln(C("Inst ensino Razão Social",instRaz,"w-full"))}
+      ${Ln(C("Inst ensino Endereço",instEnd,"w-70"),C("Inst ensino Bairro",instBai,"flex"))}
+      ${Ln(C("Inst ensino Cidade",instCid,"w-50"),C("Inst ensino Cep",instCep,"w-35"),C("Inst ensino Estado",instEst,"flex"))}
+      ${Ln(C("Regularmente matriculado no","","w-full"))}
+      ${Ln(C("Número da Matricula",matric,"w-70"),C("Nível",nivelS||nivelM,"flex"))}
+      ${Ln(C("Nome do Curso",curso,"w-full"))}
+      ${Ln(C("Ano / Semestre",anoSem,"w-70"),C("Período",periodo,"flex"))}
+
+      <div class="sec">Status do funcionário</div>
+      ${Ln(C("Data Admissão",adm,"w-70"),C("Data desligamento",deslig,"flex"))}
+    </div>`;
+}
+
+// ====== TERMOS ======
+function termoCabecalho(titulo){ return `<div class="title">${titulo}</div>`; }
+function termoQualificacao(d){
+  const nome   = getFromMany(d,["nome","colaborador"]);
+  const nac    = getFromMany(d,["nacionalidade"]);
+  const estciv = getFromMany(d,["estado civil","estadocivil"]);
+  const prof   = getFromMany(d,["profissão","profissao","cargo"]);
+  const rg     = getFromMany(d,["rg","carteira de identidade"]);
+  const orgao  = getFromMany(d,["órgão emissor","orgao emissor","orgao_emissor"]);
+  const cpf    = formatCPF(getFromMany(d,["cpf"]));
+  const end    = compEndereco(d);
+  return `<p class="p">Eu, <b>${v(nome)}</b>, ${nac?`nacionalidade <b>${nac}</b>, `:""}${estciv?`estado civil <b>${estciv}</b>, `:""}${prof?`profissão <b>${prof}</b>, `:""}portador(a) do RG nº <b>${v(rg)}</b>${orgao?` (${orgao})`:""}, CPF nº <b>${v(cpf)}</b>${end?`, residente à <b>${end}</b>`:""}, declaro que:</p>`;
+}
+function termoClausulas(entidadeCurta){
+  return `
+    <ol class="list" style="padding-left:18px">
+      <li class="p">Comprometo-me a tomar todas as precauções para assegurar a confidencialidade, integridade e não divulgação de qualquer informação sigilosa que me seja confiada por ${entidadeCurta}.</li>
+      <li class="p">Serão consideradas <b>Informações Sigilosas</b> todas as informações, em qualquer meio, incluindo mas não se limitando a: métodos e estratégias pedagógicas e comerciais, modelos de negócio, documentos, contratos, especificações, desenhos, diagramas, softwares, bancos de dados, listas de clientes e fornecedores, preços, custos, estudos, pesquisas, fotografias, fluxogramas, processos e quaisquer outros materiais classificados como confidenciais.</li>
+      <li class="p">Não poderei utilizar as Informações Sigilosas para fins particulares, nem as revelar, reproduzir, repassar, expor ou divulgar a quem quer que seja, salvo mediante consentimento <b>expresso e por escrito</b> de ${entidadeCurta}.</li>
+      <li class="p">Na hipótese de término do vínculo, obrigo-me a devolver imediatamente todos os documentos, mídias ou quaisquer materiais que contenham Informações Sigilosas.</li>
+      <li class="p">Estou ciente de que a violação das obrigações de sigilo poderá acarretar a adoção de medidas judiciais e extrajudiciais de ordem civil, administrativa e/ou penal.</li>
+      <li class="p">Este termo permanecerá em vigor desde a data da revelação das Informações Sigilosas até <b>5 (cinco) anos</b> após o término do vínculo.</li>
+    </ol>
+    <p class="p">E, por estar de acordo, firmo o presente termo.</p>
+  `;
+}
+function blocoAssinaturas(entidade){
+  return `
+    <div class="signature" style="margin-top:18mm"><div class="sigline">São Paulo, ____/____/________</div></div>
+    <div class="signature" style="margin-top:8mm"><div class="sigline">${entidade}</div><div class="sigline">Colaborador(a)</div></div>
+    <div class="signature" style="margin-top:8mm"><div class="sigline">Testemunha 1 — Nome / RG</div><div class="sigline">Testemunha 2 — Nome / RG</div></div>
+  `;
+}
+function pageTermoMBJardins(d){
+  const ent  = "ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB JARDINS";
+  const doc1 = "CNPJ nº 36.195.301/0001-65";
+  const doc2 = "Inscrição Municipal nº 6.516.138-6 · Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
+  addPage( termoCabecalho("Termo de Confidencialidade — MB JARDINS")
+         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
+         + termoQualificacao(d) + termoClausulas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB JARDINS") + blocoAssinaturas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO") );
+}
+function pageTermoMBCentral(d){
+  const ent  = "ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB CENTRAL";
+  const doc1 = "CNPJ nº 36.195.301/0001-65";
+  const doc2 = "Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
+  addPage( termoCabecalho("Termo de Confidencialidade — MB CENTRAL")
+         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
+         + termoQualificacao(d) + termoClausulas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB CENTRAL") + blocoAssinaturas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO") );
+}
+function pageTermoBearChef(d){
+  const ent  = "JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA — BEAR CHEF";
+  const doc1 = "CNPJ nº 45.931.302/0001-11";
+  const doc2 = "IE nº 134.744.019.110 · Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
+  addPage( termoCabecalho("Termo de Confidencialidade — BEAR CHEF")
+         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
+         + termoQualificacao(d) + termoClausulas("JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA — BEAR CHEF") + blocoAssinaturas("JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA") );
+}
+function pageTermoSTEducacao(d){
+  const ent  = "ST EDUCAÇÃO";
+  const doc1 = "CNPJ nº 56.051.894/0001-01";
+  const doc2 = "Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
+  addPage(
+    termoCabecalho("Termo de Confidencialidade — ST EDUCAÇÃO")
+    + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
+    + termoQualificacao(d)
+    + termoClausulas("ST EDUCAÇÃO")
+    + blocoAssinaturas("ST EDUCAÇÃO")
+  );
+}
+
+// (12) Crachá
+function pageCracha(d){
+  const nome = (getFromMany(d,["nome","nome cracha","nome_cracha"])||"").toUpperCase();
+  const sobrenome = (getFromMany(d,["sobrenome","sobrenome cracha","sobrenome_cracha"])||"").toUpperCase();
+  const foto = getFromMany(d,["foto_url","foto"]);
+  return `
+    <div class="title">PRÉ-VISUALIZAÇÃO DO CRACHÁ</div>
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div style="width:54mm;height:85.5mm;position:relative;border:1px solid #d1d5db;box-shadow:0 1px 6px rgba(0,0,0,.08)">
+        <div style="position:absolute;left:10.8mm;top:13mm;width:33mm;height:42.4mm;background:#f1f5f9;display:grid;place-items:center">${foto?`<img src="${foto}" style="max-width:100%;max-height:100%;object-fit:cover">`:"foto"}</div>
+        <div style="position:absolute;left:0;right:0;top:58.8mm;text-align:center;font-weight:900;color:#111827">${nome||"NOME"}</div>
+          </div>
+      <div style="color:#374151;max-width:60%">A impressão do crachá sai em módulo próprio; esta página é apenas uma referência de layout.</div>
+    </div>
+  `;
+}
+
+// (15) Carta Seguro (Estagiário) — COMPLETA + .scaler
+function pageCartaSeguro(d){
+  const nome   = getFromMany(d,["nome","colaborador"]);
+  const cpf    = formatCPF(getFromMany(d,["cpf"]));
+  const rg     = getFromMany(d,["rg","carteira de identidade"]);
+  const orgao  = getFromMany(d,["órgão emissor","orgao emissor","orgao_emissor"]);
+  const dEmiss = fmtDate(getFromMany(d,[
+    "data emissao rg","data emissão rg","data de emissão do rg",
+    "data expedição rg","data expedicao rg","data expedição","data expedicao"
+  ]));
+  const nasc   = fmtDate(getFromMany(d,["data nas","data nascimento","nascimento","data_nascimento"]));
+  const estCiv = getFromMany(d,["estado civil","estadocivil","civil"]);
+  const nac    = getFromMany(d,["nacionalidade"]);
+  const profiss= getFromMany(d,["profissão","profissao","ocupação","ocupacao","cargo"]);
+
+  // Endereço residencial
+  const logRes = getFromMany(d,["endereço","endereco","logradouro","rua","logouro"]);
+  const numRes = getFromMany(d,["nº","numero","número"]);
+  const compRes= getFromMany(d,["complemento","compl"]);
+  const bairroRes = getFromMany(d,["bairro"]);
+  const cidRes    = getFromMany(d,["cidade"]);
+  const ufRes     = getFromMany(d,["estado","uf"]);
+  const cepRes    = formatCEP(getFromMany(d,["cep"]));
+  const endRes    = [logRes, numRes?("nº "+numRes):"", compRes].filter(Boolean).join(" — ");
+
+  // Endereço comercial (opcional)
+  const logCom = getFromMany(d,["endereço comercial","endereco comercial","logradouro comercial","rua comercial","endereço empresa","endereco empresa"]);
+  const numCom = getFromMany(d,["nº comercial","numero comercial","número comercial"]);
+  const compCom= getFromMany(d,["complemento comercial","compl comercial"]);
+  const bairroCom = getFromMany(d,["bairro comercial"]);
+  const cidCom    = getFromMany(d,["cidade comercial","cidade empresa"]);
+  const ufCom     = getFromMany(d,["estado comercial","uf comercial"]);
+  const cepCom    = formatCEP(getFromMany(d,["cep comercial"]));
+  const telCom    = formatTel(getFromMany(d,["telefone comercial","tel comercial"]));
+  const endCom    = [logCom, numCom?("nº "+numCom):"", compCom].filter(Boolean).join(" — ");
+  const hasCom    = [logCom,bairroCom,cidCom,ufCom,cepCom,telCom].some(x => String(x||"").trim()!=="");
+
+  // Contatos e bancários
+  const email  = getFromMany(d,["email","e-mail"]);
+  const telRes = formatTel(getFromMany(d,["telefone","tel","tel residencial","telefone residencial"]));
+  const cel    = formatTel(getFromMany(d,["celular","mobile","cel"]));
+  const contatoNome = getFromMany(d,[
+    "em caso de acidente comunicar","contato acidente","contato emergência nome",
+    "contato emergencia nome","nome contato emergencia","contato 1 nome"
+  ]);
+  const contatoTel  = formatTel(getFromMany(d,[
+    "telefone acidente","telefone contato emergencia","telefone emergência",
+    "tel contato emergencia","contato 1 telefone"
+  ]));
+  const banco  = getFromMany(d,["banco"]);
+  const ag     = getFromMany(d,["agência","agencia"]);
+  const conta  = getFromMany(d,["conta","nº da conta","numero da conta"]);
+  const renda  = getFromMany(d,["renda mensal","salário","salario","remuneração","remuneracao"]);
+
+  // Fumante
+  const fumVal = String(getFromMany(d,["fumante","tabagista"])||"").trim().toLowerCase();
+  const isFum  = ["1","true","t","y","yes","sim","s","x","✓"].includes(fumVal);
+  const fumHTML = `<span class="box">${isFum?'☑':'☐'}</span> sim &nbsp;&nbsp;&nbsp; <span class="box">${!isFum?'☑':'☐'}</span> não`;
+
+  const obs    = getFromMany(d,["obs","observações","observacoes","observação"]);
+  const cidadeParaData = cidRes || "São Paulo";
+  const localData      = fmtDateLong(new Date(), cidadeParaData);
+
+  // Conteúdo com wrapper .scaler para caber em 1 A4
+  return `
+    <div class="scaler">
+      <div class="title">SEGURO DE VIDA — MAPLE BEAR</div>
+      <div class="subtitle">Carta Seguro (Estagiário)</div>
+
+      <div class="subtitle">Dados pessoais</div>
+      ${L("Nome completo", nome)}
+      ${L("Data de Nascimento", nasc)} ${L("Estado civil", estCiv)} ${L("Nacionalidade", nac)} ${L("Profissão", profiss)}
+
+      <div class="subtitle">Documentos</div>
+      ${L("CPF", cpf)} ${L("RG", rg)} ${L("Órgão expedidor (RG)", orgao)} ${L("Data de expedição do RG", dEmiss)}
+
+      <div class="subtitle">Endereço residencial</div>
+      ${L("Endereço", endRes)} ${L("Bairro", bairroRes)} ${L("Cidade/UF", [cidRes, ufRes].filter(Boolean).join(" / "))}
+      ${L("CEP", cepRes)} ${L("E-mail", email)}
+      ${L("Telefone residencial", telRes)} ${L("Celular", cel)}
+
+      ${hasCom ? `
+        <div class="subtitle">Endereço comercial</div>
+        ${L("Endereço (com.)", endCom)} ${L("Bairro (com.)", bairroCom)}
+        ${L("Cidade/UF (com.)", [cidCom, ufCom].filter(Boolean).join(" / "))} ${L("CEP (com.)", cepCom)}
+        ${L("Telefone (com.)", telCom)}
+      ` : ""}
+
+      <div class="subtitle">Contato em caso de acidente</div>
+      ${L("Nome", contatoNome)} ${L("Telefone", contatoTel)}
+
+      <div class="subtitle">Dados bancários</div>
+      ${L("Banco", banco)} ${L("Agência", ag)} ${L("Conta", conta)}
+      ${L("Renda mensal", renda)}
+      <div class="row"><div class="lab">Fumante</div><div class="val pad">${fumHTML}</div></div>
+
+      <div class="subtitle">Declaração de Saúde</div>
+      <ol class="list" style="padding-left:18px">
+        <li class="p">Estou em perfeitas condições de saúde e em plena atividade de trabalho.</li>
+        <li class="p">Não fui submetido(a) a tratamento médico em regime hospitalar ou intervenções cirúrgicas, incluindo biópsia ou punção, nos últimos 5 (cinco) anos.</li>
+        <li class="p">Não fui submetido(a) a tratamentos com radioterapia ou quimioterapia.</li>
+        <li class="p">Não sou portador(a) de doença crônica ou congênita de conhecimento prévio.</li>
+        <li class="p">Não pratico esportes aéreos, acrobáticos ou de alto risco.</li>
+        <li class="p">Não sou piloto em competições automobilísticas ou motociclísticas.</li>
+        <li class="p">Caso haja situações que contrariem as declarações acima, descrevo a seguir.</li>
+      </ol>
+      ${L("Exceções / Observações", obs)}
+
+      <div class="signature" style="margin-top:14mm">
+        <div class="sigline">${localData}</div>
+      </div>
+      <div class="signature" style="margin-top:8mm">
+        <div class="sigline">Assinatura do(a) colaborador(a)</div>
+      </div>
+    </div>
+  `;
+}
+
+// ======================= CARREGAR NOMES =======================
+async function carregarNomes(){
+  statusEl.textContent = "Carregando nomes…";
+  try{
+    const res = await fetch(URL_LISTA_NOMES, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:"listar_nomes"}) });
+    const text = await res.text(); let data; try{ data = JSON.parse(text) } catch{ data = text }
+    const arr = toArray(data);
+    const getNome = o => (typeof o==="string") ? o : (o.nome || o.Nome || o.name || o.NOME || o.colaborador || "");
+    const getCodigo = o => (o.codigo || o.Código || o["Código"] || o.id || o.ID || "");
+    selNome.innerHTML = `<option value="">Selecione um nome</option>` + arr.map(o => {
+      const nome = getNome(o); const codigo = getCodigo(o);
+      const val = JSON.stringify({ nome, codigo });
+      return nome ? `<option value='${val.replace(/'/g,"&apos;")}'>${nome}</option>` : "";
+    }).join("");
+    statusEl.textContent = "Nomes carregados. Selecione um.";
+  }catch(e){ console.error(e); statusEl.textContent = "Falha ao carregar nomes (CORS/rede)."; }
+}
+
+// ======================= GERAR POPUP =======================
+async function gerar(){
+  const opt = selNome.value;
+  if (!opt){ alert("Selecione um nome."); return; }
+  let parsed={}; try{ parsed = JSON.parse(opt); }catch{}
+  const payload = { nome: parsed.nome || selNome.options[selNome.selectedIndex].text, codigo: parsed.codigo || null };
+
+  statusEl.textContent = "Buscando dados…";
+  let dataArr = [];
+  try{
+    const res = await fetch(URL_ENTRADA, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const text = await res.text(); try{ dataArr = toArray(JSON.parse(text)); } catch{ dataArr = toArray(text); }
+  }catch(e){ console.error(e); }
+  if (!dataArr.length){ alert("Nenhum dado retornado do webhook."); return; }
+
+  openPopup("Relatórios — " + (payload.nome || ""));
+
+  const ids = selectedDocIds();
+  if (!ids.length){ alert("Selecione ao menos um relatório para gerar."); return; }
+
+for (const id of ids){
+  if (id==="1") addPage(pageImagemMBJardins(dataArr));
+  else if (id==="2") addPage(pageImagemBearChef(dataArr));
+  else if (id==="3") addPage(pageCartaBanco(dataArr));
+  else if (id==="8") addPage(pageTermosSumario(dataArr));
+  else if (id==="9") addPage(pageChecklist(dataArr), "page-checklist");
+  else if (id==="10") {
+    addPage(pageFichaCadastralPg1(dataArr), "page-ficha");
+    addPage(pageFichaCadastralPg2(dataArr), "page-ficha");
+  }
+  else if (id==="11") pageTermoMBJardins(dataArr);
+  else if (id==="12") addPage(pageCracha(dataArr));
+  else if (id==="13") pageTermoMBCentral(dataArr);
+  else if (id==="14") pageTermoBearChef(dataArr);
+  else if (id==="15") addPage(pageCartaSeguro(dataArr));
+  else if (id==="16") pageTermoSTEducacao(dataArr);
+}
+
+  statusEl.textContent = "Pop-up gerado. Use o menu do navegador para imprimir.";
+}
+
+// init
+function init(){
+  buildChecks();
+  btnToggle.addEventListener('click', toggleAll);
+  carregarNomes();
+  btnGerar.addEventListener('click', gerar);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

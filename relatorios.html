@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relatórios</title>
+  <style>
+:root{
+  --brand:#c8102e; --brand-dark:#9f0d25; --accent:#1a73e8;
+  --text:#1f2937; --muted:#64748b; --line:#e5e7eb;
+  --bg:#f6f7fb; --card:#ffffff; --shadow:0 8px 24px rgba(2,6,23,.08);
+  --radius:16px; --success:#d1e7dd; --success-text:#0f5132;
+  --error:#f8d7da; --error-text:#842029;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand-wrap{display:flex;align-items:center;gap:12px}
+.brand-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(180deg,#fff,#f3f4f6);display:grid;place-items:center;border:1px solid var(--line);font-size:26px}
+.brand-title{display:flex;flex-direction:column;line-height:1.15}
+.brand-title strong{font-size:18px;font-weight:900}
+.brand-title span{color:var(--muted);font-size:13px}
+.container{max-width:1180px;margin:28px auto 48px;padding:0 18px}
+.page-title{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+.page-title h1{margin:0 0 6px;font-size:clamp(26px,4vw,38px);letter-spacing:-.035em;color:#111827}
+.page-title p{margin:0;color:var(--muted);line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{appearance:none;border:none;text-decoration:none;cursor:pointer;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#eef2f7;color:#111827;transition:background .15s ease,transform .02s ease,box-shadow .15s ease}
+.btn:hover{background:#dde5f0}.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(180deg,#d92540,var(--brand));color:#fff;box-shadow:0 8px 18px rgba(200,16,46,.22)}
+.btn.blue{background:linear-gradient(180deg,#2a85ff,#1a73e8);color:#fff;box-shadow:0 8px 18px rgba(26,115,232,.22)}
+.btn.green{background:#198754;color:#fff}
+.btn.danger{background:#dc3545;color:#fff}
+.combo-top{flex:1;min-width:260px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#eef2ff;font-size:15px}
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px 10px;align-items:end}
+.form-group{display:flex;flex-direction:column}
+.span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+label{font-size:11px;font-weight:800;color:#495468;text-transform:uppercase;margin-bottom:4px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #d0d7de;border-radius:8px;background:#fff;font-size:14px;min-height:40px}
+textarea{min-height:96px;resize:vertical}
+.readonly{background:#eceff3}
+.req::after{content:" *";color:#d00000}
+.status{display:none;padding:12px;border-radius:10px;margin-top:14px;font-weight:800;white-space:pre-wrap}
+.status.success{display:block;background:var(--success);color:var(--success-text)}
+.status.error{display:block;background:var(--error);color:var(--error-text)}
+.actions{margin-top:16px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.switch-wrap{display:flex;align-items:center;gap:10px;min-height:40px}
+.switch-wrap input[type="checkbox"]{width:18px;height:18px;min-height:auto;accent-color:#198754}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;font-size:13px;vertical-align:top}
+th{background:#f8fafc;font-weight:900;color:#374151;white-space:nowrap}
+tr:hover td{background:#fafafa}
+.note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:12px;margin-bottom:14px;line-height:1.45;font-size:14px}
+.hidden{display:none!important}
+.help-tip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:#facc15;
+  color:#3b2f00;
+  font-size:11px;
+  font-weight:900;
+  cursor:help;
+  line-height:1;
+  border:1px solid #eab308;
+  margin-left:4px;
+}
+
+/* ---------- CRACHÁ ---------- */
+.badge-wrap{ margin-top:18px; display:none; }
+.preview-actions{ display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+.badge-canvas{ width:54mm; height:85.5mm; position:relative; background:#fff; border:1px solid #d1d5db; box-shadow:0 4px 16px rgba(0,0,0,.08); overflow:hidden; }
+.badge-mask{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; z-index:1; }
+.badge-photo{ position:absolute; left:10.8mm; top:13mm; width:33mm; height:42.4mm; object-fit:cover; border-radius:2mm; box-shadow:0 0 0 1.5mm #fff; z-index:3; background:#f1f5f9; }
+.badge-name{ position:absolute; left:0; right:0; text-align:center; color:#fff; z-index:4; font-family:Montserrat,Segoe UI,Arial,sans-serif; text-shadow:0 1px 2px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35); line-height:1; letter-spacing:0; }
+.badge-name .nome{ position:absolute; top:58.8mm; left:50%; transform:translateX(-50%); font-size:6mm; font-weight:900; }
+.badge-name .sobrenome{ position:absolute; top:65mm; left:50%; transform:translateX(-50%); font-size:4.3mm; font-weight:700; }
+.slot-guide{ position:absolute; top:3mm; left:50%; transform:translateX(-50%); width:14mm; height:3mm; border-radius:1.5mm; box-shadow:inset 0 0 0 1px rgba(0,0,0,.25); background:transparent; z-index:5; }
+@media print{
+  body.print-badge .topbar,
+  body.print-badge .page-title,
+  body.print-badge .card:not(#card-cracha){ display:none!important; }
+  body.print-badge #card-cracha{ box-shadow:none!important; border:none!important; margin:0!important; padding:0!important; }
+  body.print-badge .preview-actions{ display:none!important; }
+  body.print-badge .badge-wrap{ display:block!important; margin:0!important; }
+  body.print-badge .badge-canvas{ box-shadow:none!important; border:none!important; }
+}
+
+@media(max-width:900px){.form-grid{grid-template-columns:1fr}.span-2,.span-3,.span-4,.span-5,.span-6,.span-8,.span-12{grid-column:span 1}.topbar-inner{align-items:flex-start;flex-direction:column}}
+
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-wrap">
+        <div class="brand-logo">🐻</div>
+        <div class="brand-title">
+          <strong>Maple Bear Jardins · RH</strong>
+          <span>Sistema de funcionários, vínculos, jornadas e documentos</span>
+        </div>
+      </div>
+      <div class="toolbar" style="margin:0">
+        <a class="btn" href="index.html">↩ Início</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="page-title">
+      <h1>Relatórios</h1>
+      <p>Relatórios operacionais de funcionários, vínculos, jornadas e dados cadastrais.</p>
+    </section>
+
+    
+<section class="card">
+  <div class="toolbar">
+    <a href="index.html" class="btn">↩ Retornar</a>
+    <button type="button" class="btn blue" id="btn-buscar">Buscar relatório</button>
+    <button type="button" class="btn" id="btn-limpar">Limpar</button>
+  </div>
+
+  <div class="form-grid">
+    <div class="form-group span-4">
+      <label for="tipo">Relatório <span class="help-tip" title="Escolha o relatório que deseja gerar. Exemplo: Funcionários ativos, Crachá, Vínculos ativos ou Inconsistências RH.">?</span></label>
+      <select id="tipo">
+        <option value="ativos">Funcionários ativos</option>
+        <option value="pesquisa_nome">Pesquisa por nome</option>
+        <option value="aniversariantes_mes">Aniversariantes do mês</option>
+        <option value="pessoais">Informações pessoais</option>
+        <option value="vt">Informações VT</option>
+        <option value="atualizacao_cadastral">Atualização Cadastral</option>
+        <option value="cracha">Crachá</option>
+        <option value="vinculos_ativos">Vínculos ativos</option>
+        <option value="jornadas">Jornadas</option>
+        <option value="sem_jornada">Vínculos ativos sem jornada</option>
+        <option value="inconsistencias">Inconsistências RH</option>
+      </select>
+    </div>
+
+    <div class="form-group span-4">
+      <label for="sel-funcionario">Funcionário ativo <span class="help-tip" title="Selecione um funcionário ativo para filtrar o relatório. Deixe em Todos para relatórios gerais. No relatório Crachá, o CPF é pego automaticamente do funcionário selecionado.">?</span></label>
+      <select id="sel-funcionario">
+        <option value="">Carregando funcionários ativos...</option>
+      </select>
+      <input id="nome" type="hidden">
+      <input id="cpf" type="hidden">
+    </div>
+
+    <div class="form-group span-2">
+      <label for="mes">Mês <span class="help-tip" title="Usado no relatório de aniversariantes. Informe um número de 1 a 12. Exemplo: 1 para janeiro, 8 para agosto.">?</span></label>
+      <input type="number" id="mes" min="1" max="12" value="1">
+    </div>
+  </div>
+
+  <div id="status-message" class="status"></div>
+
+  <div class="actions">
+    <a id="csvBtn" class="btn green hidden" download="relatorio.csv">Baixar CSV</a>
+    <button id="printBtn" class="btn hidden" type="button">Imprimir</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Resultado</h2>
+  <div class="table-wrap">
+    <table id="resultado">
+      <thead></thead>
+      <tbody><tr><td>Nenhuma busca realizada.</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card hidden" id="card-cracha">
+  <h2>Prévia do crachá</h2>
+  <div class="badge-wrap" id="badgeWrap">
+    <div class="preview-actions">
+      <button class="btn" type="button" id="printBadgeBtn">🖨️ Imprimir crachá</button>
+      <span style="font-size:14px;color:#374151">Tamanho real: 54 mm × 85,5 mm</span>
+    </div>
+    <div class="badge-canvas">
+      <div class="slot-guide" title="Guia do slot 14x3 mm"></div>
+      <img id="badgeMask" class="badge-mask" src="mascara-cracha.png" alt="">
+      <img id="badgePhoto" class="badge-photo" alt="Foto">
+      <div class="badge-name">
+        <div class="nome" id="badgeNome">NOME</div>
+        <div class="sobrenome" id="badgeSobrenome">SOBRENOME</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  </main>
+
+  <script>
+function showMsg(msg, ok=true){
+  const el = document.getElementById("status-message");
+  if(!el) return;
+  el.textContent = typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
+  el.className = "status " + (ok ? "success" : "error");
+}
+function clearMsg(){
+  const el = document.getElementById("status-message");
+  if(el){ el.textContent=""; el.className="status"; }
+}
+function isPlaceholder(url){ return !url || url.includes("COLE_AQUI"); }
+function extractList(data){
+  if(Array.isArray(data)) return data;
+  if(data && typeof data === "object"){
+    for(const k of ["data","items","rows","result","records","body","output"]){
+      if(Array.isArray(data[k])) return data[k];
+    }
+  }
+  return [];
+}
+async function postJson(url, payload={}){
+  if(isPlaceholder(url)){
+    throw new Error("Endpoint não configurado: " + url);
+  }
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  });
+  const text = await res.text();
+  let data;
+  try{ data = JSON.parse(text); } catch { data = text; }
+  if(!res.ok){
+    const msg = (data && (data.message || data.error)) || text || "Falha na requisição.";
+    throw new Error(msg);
+  }
+  return data;
+}
+function onlyDigits(v){ return String(v ?? "").replace(/\D/g, ""); }
+function norm(v){
+  return String(v ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim().toLowerCase();
+}
+function val(id){ return document.getElementById(id)?.value ?? ""; }
+function setVal(id, value){ const el=document.getElementById(id); if(el) el.value = value ?? ""; }
+function setChecked(id, value){
+  const el=document.getElementById(id);
+  if(el) el.checked = value === true || value === "true" || value === 1 || value === "1" || value === "Sim" || value === "sim";
+}
+function getChecked(id){ return !!document.getElementById(id)?.checked; }
+function parseNum(v){
+  const s = String(v ?? "").trim();
+  if(!s) return null;
+  const n = Number(s.replace(/\./g,"").replace(",","."));
+  return Number.isFinite(n) ? n : null;
+}
+function formatNum(v){
+  if(v === null || v === undefined || v === "") return "";
+  return String(v).replace(".", ",");
+}
+function optionText(item, fields){
+  for(const f of fields){
+    const value = item?.[f];
+    if(value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+}
+function fillSelect(id, list, config={}){
+  const sel = document.getElementById(id);
+  if(!sel) return;
+  const {valueFields=["id"], labelFields=["nome","Nome"], first="Selecione"} = config;
+  sel.innerHTML = "";
+  const firstOpt = document.createElement("option");
+  firstOpt.value = "";
+  firstOpt.textContent = first;
+  sel.appendChild(firstOpt);
+
+  list.forEach(item => {
+    const label = optionText(item, labelFields);
+    let value = optionText(item, valueFields);
+    if(!value && item?.id !== undefined) value = String(item.id);
+    if(!label && !value) return;
+    const opt = document.createElement("option");
+    opt.value = value || label;
+    opt.textContent = label || value;
+    sel.appendChild(opt);
+  });
+}
+function payloadFromFields(fields){
+  const out = {};
+  for(const [key, cfg] of Object.entries(fields)){
+    if(cfg.type === "checkbox") out[key] = getChecked(cfg.id);
+    else if(cfg.type === "number") out[key] = parseNum(val(cfg.id));
+    else out[key] = val(cfg.id) || null;
+  }
+  return out;
+}
+</script>
+  <script>
+const WEBHOOK_PESSOAIS  = "https://webhook.maplebearjardins.pro/webhook/6fce1e85-15cb-43fd-b694-451749c08bf0";
+const WEBHOOK_VT        = "https://webhook.maplebearjardins.pro/webhook/65ac4984-665e-4e46-904d-81e8ae70f01b";
+const WEBHOOK_ATIVOS    = "https://webhook.maplebearjardins.pro/webhook/7d05a5c8-7dba-494b-afb8-a3d313d1b65e";
+const WEBHOOK_PESQ_NOME = "https://webhook.maplebearjardins.pro/webhook/e413f064-06a1-42d9-8a9e-0e586f77868a";
+const WEBHOOK_BDAY      = "https://webhook.maplebearjardins.pro/webhook/e6a3d128-81db-4fc2-a485-ec004d0f67bc";
+const WEBHOOK_FUNCIONARIOS_COMBO = "https://webhook.maplebearjardins.pro/webhook/e1fb46c9-bc88-4de1-96f2-a83a5370d101";
+const WEBHOOK_CRACHA = "https://webhook.maplebearjardins.pro/webhook/be048ff1-2bdd-4bcd-bd7e-8670eec85a96";
+
+const WEBHOOK_VINCULOS_ATIVOS = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_vinculos_ativos_001";
+const WEBHOOK_JORNADAS = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_jornadas_001";
+const WEBHOOK_SEM_JORNADA = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_sem_jornada_001";
+const WEBHOOK_INCONSISTENCIAS = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_inconsistencias_001";
+
+function csvEscape(v){
+  if(v === null || v === undefined) return "";
+  const s = String(v).replace(/"/g,'""');
+  return /[",\n;]/.test(s) ? `"${s}"` : s;
+}
+function toCSV(rows){
+  if(!rows.length) return "";
+  const headers = Object.keys(rows[0]);
+  return [headers.join(";"), ...rows.map(r => headers.map(h => csvEscape(r[h])).join(";"))].join("\n");
+}
+function render(rows){
+  const thead = document.querySelector("#resultado thead");
+  const tbody = document.querySelector("#resultado tbody");
+  if(!rows.length){
+    thead.innerHTML = "";
+    tbody.innerHTML = "<tr><td>Sem dados.</td></tr>";
+    document.getElementById("csvBtn").classList.add("hidden");
+    document.getElementById("printBtn").classList.add("hidden");
+    return;
+  }
+  const headers = Object.keys(rows[0]);
+  thead.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+  tbody.innerHTML = rows.map(r => "<tr>" + headers.map(h => `<td>${r[h] ?? ""}</td>`).join("") + "</tr>").join("");
+
+  const csv = toCSV(rows);
+  const link = document.getElementById("csvBtn");
+  link.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
+  link.download = "relatorio_" + val("tipo") + ".csv";
+  link.classList.remove("hidden");
+  document.getElementById("printBtn").classList.remove("hidden");
+}
+
+
+
+function esconderCracha(){
+  document.getElementById("card-cracha")?.classList.add("hidden");
+  const wrap = document.getElementById("badgeWrap");
+  if(wrap) wrap.style.display = "none";
+  document.body.classList.remove("print-badge");
+}
+
+function mostrarCracha(){
+  document.getElementById("card-cracha")?.classList.remove("hidden");
+  const wrap = document.getElementById("badgeWrap");
+  if(wrap) wrap.style.display = "block";
+}
+
+function pickLocal(obj, candidates){
+  if(!obj || typeof obj !== "object") return undefined;
+  const map = Object.fromEntries(Object.keys(obj).map(k => [norm(k), k]));
+  for(const c of candidates){
+    const hit = map[norm(c)];
+    if(hit !== undefined) return obj[hit];
+  }
+  for(const k in obj){
+    const nk = norm(k);
+    if(candidates.some(c => nk.includes(norm(c)))) return obj[k];
+  }
+  return undefined;
+}
+
+function renderBadge(dataRaw){
+  const arr = Array.isArray(dataRaw) ? dataRaw : extractList(dataRaw);
+  const data = arr[0] || (dataRaw && typeof dataRaw === "object" ? dataRaw : {});
+
+  const foto = pickLocal(data, ["foto_url", "foto", "Foto", "image", "url", "link"]);
+  const nome = pickLocal(data, ["nome_cracha", "nome do cracha", "Nome do cracha", "nome", "Nome"]);
+  const sobrenome = pickLocal(data, ["sobrenome_cracha", "sobrenome do cracha", "Sobrenome do cracha", "sobrenome"]);
+
+  const badgePhoto = document.getElementById("badgePhoto");
+  const badgeNome = document.getElementById("badgeNome");
+  const badgeSobrenome = document.getElementById("badgeSobrenome");
+
+  if(foto) badgePhoto.src = String(foto);
+  else badgePhoto.removeAttribute("src");
+
+  badgeNome.textContent = (nome ? String(nome) : "NOME").toUpperCase();
+  badgeSobrenome.textContent = (sobrenome ? String(sobrenome) : "SOBRENOME").toUpperCase();
+
+  mostrarCracha();
+}
+
+function cpfSelecionado(){
+  const sel = document.getElementById("sel-funcionario");
+  const opt = sel?.selectedOptions?.[0];
+  return opt?.dataset?.cpf || val("cpf") || "";
+}
+
+function obterNomeLinha(row){
+  const possiveis = [
+    "Nome", "nome",
+    "funcionario", "Funcionário",
+    "funcionario_nome", "funcionário_nome",
+    "colaborador", "Colaborador"
+  ];
+
+  for(const k of possiveis){
+    if(row && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== ""){
+      return String(row[k]).trim();
+    }
+  }
+
+  return "";
+}
+
+function filtrarPorFuncionario(rows, nomeSelecionado){
+  const alvo = norm(nomeSelecionado);
+
+  if(!alvo) return rows;
+
+  return rows.filter(row => norm(obterNomeLinha(row)).includes(alvo));
+}
+
+async function carregarFuncionariosAtivos(){
+  const sel = document.getElementById("sel-funcionario");
+
+  if(!sel) return;
+
+  try{
+    const data = await postJson(WEBHOOK_FUNCIONARIOS_COMBO, { acao: "listar_nomes" });
+    const lista = extractList(data)
+      .map(item => ({
+        nome: optionText(item, ["Nome", "nome", "funcionario_nome", "colaborador"]),
+        cpf: optionText(item, ["CPF", "cpf", "funcionario_cpf"])
+      }))
+      .filter(item => item.nome)
+      .sort((a,b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+    sel.innerHTML = `<option value="">Todos os funcionários ativos</option>` + lista.map(item => {
+      const safeNome = String(item.nome).replace(/"/g, "&quot;");
+      const label = item.cpf ? `${item.nome} | ${item.cpf}` : item.nome;
+      const safeCpf = String(item.cpf || "").replace(/"/g, "&quot;");
+      return `<option value="${safeNome}" data-cpf="${safeCpf}">${label}</option>`;
+    }).join("");
+
+    // Combo carregado sem mensagem visual para não poluir a tela.
+  }catch(e){
+    sel.innerHTML = `<option value="">Não foi possível carregar funcionários</option>`;
+    showMsg("Falha ao carregar combo de funcionários ativos: " + e.message, false);
+  }
+}
+
+function sincronizarNomeSelecionado(){
+  const nomeSelecionado = val("sel-funcionario");
+  const cpf = cpfSelecionado();
+  setVal("nome", nomeSelecionado || "");
+  setVal("cpf", cpf || "");
+}
+
+async function buscar(){
+  clearMsg();
+  esconderCracha();
+  sincronizarNomeSelecionado();
+
+  const tipo = val("tipo");
+  const nome = val("sel-funcionario") || val("nome");
+  const mes = parseNum(val("mes"));
+  let url = "";
+  let payload = { tipo, params:{} };
+
+  if(tipo === "ativos") url = WEBHOOK_ATIVOS;
+  if(tipo === "pessoais") url = WEBHOOK_PESSOAIS;
+  if(tipo === "vt") url = WEBHOOK_VT;
+  if(tipo === "atualizacao_cadastral") url = WEBHOOK_PESSOAIS;
+  if(tipo === "pesquisa_nome"){
+    url = WEBHOOK_PESQ_NOME;
+
+    if(!nome){
+      showMsg("Selecione um funcionário ativo para usar a pesquisa por nome.", false);
+      return;
+    }
+
+    payload.params.nome = nome;
+  }
+  if(tipo === "aniversariantes_mes"){ url = WEBHOOK_BDAY; payload.params.mes = mes; }
+  if(tipo === "vinculos_ativos") url = WEBHOOK_VINCULOS_ATIVOS;
+  if(tipo === "jornadas") url = WEBHOOK_JORNADAS;
+  if(tipo === "sem_jornada") url = WEBHOOK_SEM_JORNADA;
+  if(tipo === "inconsistencias") url = WEBHOOK_INCONSISTENCIAS;
+  if(tipo === "cracha"){
+    url = WEBHOOK_CRACHA;
+    const cpf = cpfSelecionado();
+
+    if(!cpf){
+      showMsg("Selecione um funcionário ativo para gerar o crachá.", false);
+      return;
+    }
+
+    payload.params.cpf = cpf;
+  }
+
+  try{
+    const data = await postJson(url, payload);
+    if(tipo === "cracha"){
+      renderBadge(data);
+      document.querySelector("#resultado thead").innerHTML = "";
+      document.querySelector("#resultado tbody").innerHTML = "<tr><td>Crachá gerado na prévia abaixo.</td></tr>";
+      document.getElementById("csvBtn").classList.add("hidden");
+      document.getElementById("printBtn").classList.add("hidden");
+      showMsg("Crachá carregado para: " + (nome || cpfSelecionado()), true);
+      return;
+    }
+
+    let rows = extractList(data);
+    if(!rows.length && data && typeof data === "object") rows = [data];
+
+    const totalOriginal = rows.length;
+    rows = filtrarPorFuncionario(rows, nome);
+
+    render(rows);
+
+    const filtroMsg = nome ? ` | filtro: ${nome} (${rows.length}/${totalOriginal})` : "";
+    const titulo = tipo === "atualizacao_cadastral" ? "Atualização cadastral" : "Relatório";
+    showMsg(titulo + " carregado: " + rows.length + " registro(s)." + filtroMsg, true);
+  }catch(e){ showMsg(e.message, false); }
+}
+
+function limpar(){
+  esconderCracha();
+  setVal("sel-funcionario", "");
+  setVal("nome", "");
+  setVal("cpf", "");
+  document.querySelector("#resultado thead").innerHTML = "";
+  document.querySelector("#resultado tbody").innerHTML = "<tr><td>Nenhuma busca realizada.</td></tr>";
+  document.getElementById("csvBtn").classList.add("hidden");
+  document.getElementById("printBtn").classList.add("hidden");
+  clearMsg();
+}
+
+document.getElementById("btn-buscar").addEventListener("click", buscar);
+document.getElementById("btn-limpar").addEventListener("click", limpar);
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+document.getElementById("printBadgeBtn").addEventListener("click", () => {
+  document.body.classList.add("print-badge");
+  window.print();
+  setTimeout(() => document.body.classList.remove("print-badge"), 500);
+});
+document.getElementById("sel-funcionario").addEventListener("change", sincronizarNomeSelecionado);
+document.addEventListener("DOMContentLoaded", carregarFuncionariosAtivos);
+</script>
+
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

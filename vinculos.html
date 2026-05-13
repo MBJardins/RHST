@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vínculos</title>
+  <style>
+:root{
+  --brand:#c8102e; --brand-dark:#9f0d25; --accent:#1a73e8;
+  --text:#1f2937; --muted:#64748b; --line:#e5e7eb;
+  --bg:#f6f7fb; --card:#ffffff; --shadow:0 8px 24px rgba(2,6,23,.08);
+  --radius:16px; --success:#d1e7dd; --success-text:#0f5132;
+  --error:#f8d7da; --error-text:#842029;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand-wrap{display:flex;align-items:center;gap:12px}
+.brand-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(180deg,#fff,#f3f4f6);display:grid;place-items:center;border:1px solid var(--line);font-size:26px}
+.brand-title{display:flex;flex-direction:column;line-height:1.15}
+.brand-title strong{font-size:18px;font-weight:900}
+.brand-title span{color:var(--muted);font-size:13px}
+.container{max-width:1180px;margin:28px auto 48px;padding:0 18px}
+.page-title{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+.page-title h1{margin:0 0 6px;font-size:clamp(26px,4vw,38px);letter-spacing:-.035em;color:#111827}
+.page-title p{margin:0;color:var(--muted);line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{appearance:none;border:none;text-decoration:none;cursor:pointer;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#eef2f7;color:#111827;transition:background .15s ease,transform .02s ease,box-shadow .15s ease}
+.btn:hover{background:#dde5f0}.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(180deg,#d92540,var(--brand));color:#fff;box-shadow:0 8px 18px rgba(200,16,46,.22)}
+.btn.blue{background:linear-gradient(180deg,#2a85ff,#1a73e8);color:#fff;box-shadow:0 8px 18px rgba(26,115,232,.22)}
+.btn.green{background:#198754;color:#fff}
+.btn.danger{background:#dc3545;color:#fff}
+.combo-top{flex:1;min-width:260px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#eef2ff;font-size:15px}
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px 10px;align-items:end}
+.form-group{display:flex;flex-direction:column}
+.span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+label{font-size:11px;font-weight:800;color:#495468;text-transform:uppercase;margin-bottom:4px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #d0d7de;border-radius:8px;background:#fff;font-size:14px;min-height:40px}
+input[readonly], select[disabled]{background:#eceff3;color:#475569;cursor:not-allowed}
+textarea{min-height:96px;resize:vertical}
+.readonly{background:#eceff3}
+.req::after{content:" *";color:#d00000}
+.status{display:none;padding:12px;border-radius:10px;margin-top:14px;font-weight:800;white-space:pre-wrap}
+.status.success{display:block;background:var(--success);color:var(--success-text)}
+.status.error{display:block;background:var(--error);color:var(--error-text)}
+.actions{margin-top:16px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.switch-wrap{display:flex;align-items:center;gap:10px;min-height:40px}
+.switch-wrap input[type="checkbox"]{width:18px;height:18px;min-height:auto;accent-color:#198754}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;font-size:13px;vertical-align:top}
+th{background:#f8fafc;font-weight:900;color:#374151;white-space:nowrap}
+tr:hover td{background:#fafafa}
+.note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:12px;margin-bottom:14px;line-height:1.45;font-size:14px}
+.hidden{display:none!important}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr}.span-2,.span-3,.span-4,.span-5,.span-6,.span-8,.span-12{grid-column:span 1}.topbar-inner{align-items:flex-start;flex-direction:column}}
+
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-wrap">
+        <div class="brand-logo">🐻</div>
+        <div class="brand-title">
+          <strong>Maple Bear Jardins · RH</strong>
+          <span>Sistema de funcionários, vínculos, jornadas e documentos</span>
+        </div>
+      </div>
+      <div class="toolbar" style="margin:0">
+        <a class="btn" href="index.html">↩ Início</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="page-title">
+      <h1>Vínculos</h1>
+      <p>Contrato real do funcionário: empresa, cargo, salário, jornada, status e regras operacionais.</p>
+    </section>
+
+    
+<section class="card">
+  <div class="note">
+    Esta tela trabalha a tabela <strong>00_geral_funcionarios_vinculos</strong>. Ela deve salvar o contrato/vínculo do funcionário, não os dados pessoais.
+  </div>
+
+  <div class="toolbar">
+    <a href="index.html" class="btn">↩ Retornar</a>
+    <button type="button" class="btn blue" id="btn-carregar">Carregar listas</button>
+    <button type="button" class="btn" id="btn-buscar">Buscar vínculo</button>
+    <button type="button" class="btn green" id="btn-novo">Novo vínculo</button>
+    <select id="sel-funcionario" class="combo-top">
+      <option value="">Carregue os funcionários...</option>
+    </select>
+  </div>
+
+  <form id="form-vinculo">
+    <input type="hidden" id="id" name="id">
+
+    <h2>Dados do vínculo</h2>
+    <div class="form-grid">
+      <div class="form-group span-4">
+        <label class="req" for="funcionario_cpf">Funcionário CPF</label>
+        <input id="funcionario_cpf" name="funcionario_cpf" required>
+      </div>
+
+      <div class="form-group span-4">
+        <label for="empresa_id">Empresa</label>
+        <select id="empresa_id" name="empresa_id">
+          <option value="">Carregue empresas...</option>
+        </select>
+      </div>
+
+      <div class="form-group span-4">
+        <label for="cargo_id">Cargo</label>
+        <select id="cargo_id" name="cargo_id" required>
+          <option value="">Carregue cargos...</option>
+        </select>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="tipo_vinculo">Tipo de vínculo</label>
+        <select id="tipo_vinculo" name="tipo_vinculo">
+          <option value="clt">CLT</option>
+          <option value="estagio">Estágio</option>
+          <option value="jovem_aprendiz">Jovem aprendiz</option>
+          <option value="pj">PJ</option>
+          <option value="autonomo">Autônomo</option>
+          <option value="temporario">Temporário</option>
+          <option value="aulista">Aulista</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="status_vinculo">Status</label>
+        <select id="status_vinculo" name="status_vinculo">
+          <option value="ativo">Ativo</option>
+          <option value="afastado">Afastado</option>
+          <option value="ferias">Férias</option>
+          <option value="desligado">Desligado</option>
+          <option value="suspenso">Suspenso</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="data_admissao">Data admissão</label>
+        <input type="date" id="data_admissao" name="data_admissao">
+      </div>
+
+      <div class="form-group span-3">
+        <label for="data_desligamento">Data desligamento</label>
+        <input type="date" id="data_desligamento" name="data_desligamento">
+      </div>
+
+      <div class="form-group span-3">
+        <label for="salario_base">Salário base</label>
+        <input id="salario_base" name="salario_base" inputmode="decimal" class="readonly" readonly>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="bonus_base">Bônus base</label>
+        <input id="bonus_base" name="bonus_base" inputmode="decimal" class="readonly" readonly>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="carga_horaria_semanal">Carga horária semanal</label>
+        <input id="carga_horaria_semanal" name="carga_horaria_semanal" inputmode="decimal" class="readonly" readonly>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="tipo_calculo">Tipo de cálculo</label>
+        <select id="tipo_calculo" name="tipo_calculo" disabled>
+          <option value="mensalista">Mensalista</option>
+          <option value="horista">Horista</option>
+          <option value="aulista">Aulista</option>
+          <option value="diarista">Diarista</option>
+          <option value="bolsista">Bolsista</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="form-group span-3">
+        <label for="jornada_id">Jornada do funcionário</label>
+        <select id="jornada_id" name="jornada_id" disabled>
+          <option value="">Selecione um funcionário</option>
+        </select>
+      </div>
+
+      <div class="form-group span-12">
+        <div class="note" style="margin:0">
+          Salário base, bônus, carga horária semanal e tipo de cálculo vêm do cargo selecionado.
+          Se a condição for diferente, o correto é criar outro cargo. A jornada é apenas a jornada ativa do próprio funcionário.
+        </div>
+      </div>
+
+      <div class="form-group span-3">
+        <label>Exige ponto</label>
+        <div class="switch-wrap">
+          <input type="checkbox" id="exige_ponto" checked>
+          <span>Sim</span>
+        </div>
+      </div>
+
+      <div class="form-group span-3">
+        <label>Permite hora extra</label>
+        <div class="switch-wrap">
+          <input type="checkbox" id="permite_hora_extra" checked>
+          <span>Sim</span>
+        </div>
+      </div>
+
+      <div class="form-group span-12">
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes" name="observacoes"></textarea>
+      </div>
+    </div>
+
+    <div id="status-message" class="status"></div>
+
+    <div class="actions">
+      <button type="button" class="btn" id="btn-limpar">Limpar</button>
+      <button type="submit" class="btn primary">Salvar vínculo</button>
+    </div>
+  </form>
+</section>
+
+  </main>
+
+  <script>
+function showMsg(msg, ok=true){
+  const el = document.getElementById("status-message");
+  if(!el) return;
+  el.textContent = typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
+  el.className = "status " + (ok ? "success" : "error");
+}
+function clearMsg(){
+  const el = document.getElementById("status-message");
+  if(el){ el.textContent=""; el.className="status"; }
+}
+function isPlaceholder(url){ return !url || url.includes("COLE_AQUI"); }
+function extractList(data){
+  if(Array.isArray(data)) return data;
+  if(data && typeof data === "object"){
+    for(const k of ["data","items","rows","result","records","body","output"]){
+      if(Array.isArray(data[k])) return data[k];
+    }
+  }
+  return [];
+}
+async function postJson(url, payload={}){
+  if(isPlaceholder(url)){
+    throw new Error("Endpoint não configurado: " + url);
+  }
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  });
+  const text = await res.text();
+  let data;
+  try{ data = JSON.parse(text); } catch { data = text; }
+  if(!res.ok){
+    const msg = (data && (data.message || data.error)) || text || "Falha na requisição.";
+    throw new Error(msg);
+  }
+  return data;
+}
+function onlyDigits(v){ return String(v ?? "").replace(/\D/g, ""); }
+function norm(v){
+  return String(v ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim().toLowerCase();
+}
+function val(id){ return document.getElementById(id)?.value ?? ""; }
+function setVal(id, value){ const el=document.getElementById(id); if(el) el.value = value ?? ""; }
+function setChecked(id, value){
+  const el=document.getElementById(id);
+  if(el) el.checked = value === true || value === "true" || value === 1 || value === "1" || value === "Sim" || value === "sim";
+}
+function getChecked(id){ return !!document.getElementById(id)?.checked; }
+function parseNum(v){
+  const s = String(v ?? "").trim();
+  if(!s) return null;
+  const n = Number(s.replace(/\./g,"").replace(",","."));
+  return Number.isFinite(n) ? n : null;
+}
+function formatNum(v){
+  if(v === null || v === undefined || v === "") return "";
+  return String(v).replace(".", ",");
+}
+function optionText(item, fields){
+  for(const f of fields){
+    const value = item?.[f];
+    if(value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+}
+function fillSelect(id, list, config={}){
+  const sel = document.getElementById(id);
+  if(!sel) return;
+  const {valueFields=["id"], labelFields=["nome","Nome"], first="Selecione"} = config;
+  sel.innerHTML = "";
+  const firstOpt = document.createElement("option");
+  firstOpt.value = "";
+  firstOpt.textContent = first;
+  sel.appendChild(firstOpt);
+
+  list.forEach(item => {
+    const label = optionText(item, labelFields);
+    let value = optionText(item, valueFields);
+    if(!value && item?.id !== undefined) value = String(item.id);
+    if(!label && !value) return;
+    const opt = document.createElement("option");
+    opt.value = value || label;
+    opt.textContent = label || value;
+    sel.appendChild(opt);
+  });
+}
+function payloadFromFields(fields){
+  const out = {};
+  for(const [key, cfg] of Object.entries(fields)){
+    if(cfg.type === "checkbox") out[key] = getChecked(cfg.id);
+    else if(cfg.type === "number") out[key] = parseNum(val(cfg.id));
+    else out[key] = val(cfg.id) || null;
+  }
+  return out;
+}
+</script>
+  <script>
+const LISTAR_FUNCIONARIOS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/e1fb46c9-bc88-4de1-96f2-a83a5370d101";
+const LISTAR_EMPRESAS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_empresas_listar_001";
+const LISTAR_CARGOS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/3697255f-03bf-4f7b-9582-63134c1ae7dc";
+const LISTAR_JORNADAS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_jornadas_listar_001";
+const BUSCAR_VINCULO_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_vinculos_buscar_001";
+const SALVAR_VINCULO_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_vinculos_salvar_001";
+
+const form = document.getElementById("form-vinculo");
+let cargosCache = [];
+let jornadasCache = [];
+
+const fields = {
+  funcionario_cpf:{id:"funcionario_cpf"},
+  empresa_id:{id:"empresa_id", type:"number"},
+  cargo_id:{id:"cargo_id", type:"number"},
+  tipo_vinculo:{id:"tipo_vinculo"},
+  status_vinculo:{id:"status_vinculo"},
+  data_admissao:{id:"data_admissao"},
+  data_desligamento:{id:"data_desligamento"},
+  salario_base:{id:"salario_base", type:"number"},
+  bonus_base:{id:"bonus_base", type:"number"},
+  carga_horaria_semanal:{id:"carga_horaria_semanal", type:"number"},
+  tipo_calculo:{id:"tipo_calculo"},
+  exige_ponto:{id:"exige_ponto", type:"checkbox"},
+  permite_hora_extra:{id:"permite_hora_extra", type:"checkbox"},
+  jornada_id:{id:"jornada_id"},
+  observacoes:{id:"observacoes"}
+};
+
+function pick(obj, keys){
+  if(!obj) return null;
+  for(const key of keys){
+    if(obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== "") return obj[key];
+  }
+  const normalized = Object.fromEntries(Object.keys(obj).map(k => [norm(k), k]));
+  for(const key of keys){
+    const hit = normalized[norm(key)];
+    if(hit && obj[hit] !== undefined && obj[hit] !== null && String(obj[hit]).trim() !== "") return obj[hit];
+  }
+  return null;
+}
+
+function tipoCalculoDoCargo(cargo){
+  const direto = pick(cargo, ["tipo_calculo", "Tipo cálculo", "Tipo calculo", "tipo calculo"]);
+  if(direto) return String(direto);
+  const nome = norm(pick(cargo, ["Cargo", "cargo"]));
+  if(nome.includes("aulista")) return "aulista";
+  if(nome.includes("horista")) return "horista";
+  if(nome.includes("estagi")) return "bolsista";
+  return "mensalista";
+}
+
+function limparValoresDoCargo(){
+  setVal("salario_base", "");
+  setVal("bonus_base", "");
+  setVal("carga_horaria_semanal", "");
+  setVal("tipo_calculo", "mensalista");
+}
+
+function aplicarCargoSelecionado(){
+  const cargoId = val("cargo_id");
+  const cargo = cargosCache.find(c => String(c.id ?? c.ID ?? "") === String(cargoId));
+  if(!cargo){
+    limparValoresDoCargo();
+    return;
+  }
+
+  setVal("salario_base", formatNum(pick(cargo, ["Salario", "salario", "Salário"])));
+  setVal("bonus_base", formatNum(pick(cargo, ["Bonus", "bonus", "Bônus"])));
+  setVal("carga_horaria_semanal", formatNum(pick(cargo, ["Carga horaria", "Carga horária", "carga_horaria", "carga horaria"])));
+  setVal("tipo_calculo", tipoCalculoDoCargo(cargo));
+
+  const exigePontoCargo = pick(cargo, ["exige_ponto", "Exige ponto"]);
+  if(exigePontoCargo !== null) setChecked("exige_ponto", exigePontoCargo);
+
+  const permiteHoraExtraCargo = pick(cargo, ["permite_hora_extra", "Permite hora extra"]);
+  if(permiteHoraExtraCargo !== null) setChecked("permite_hora_extra", permiteHoraExtraCargo);
+}
+
+function limparJornada(){
+  jornadasCache = [];
+  fillSelect("jornada_id", [], {
+    valueFields:["id"],
+    labelFields:["label","nome_jornada"],
+    first:"Selecione um funcionário"
+  });
+  setVal("jornada_id", "");
+}
+
+async function carregarJornadasDoFuncionario(cpf, jornadaIdPreferida = ""){
+  limparJornada();
+  if(!cpf) return;
+
+  try{
+    const data = await postJson(LISTAR_JORNADAS_WEBHOOK, { funcionario_cpf: cpf });
+    jornadasCache = extractList(data);
+    fillSelect("jornada_id", jornadasCache, {
+      valueFields:["id"],
+      labelFields:["label","nome_jornada","funcionario_cpf"],
+      first:"Sem jornada ativa"
+    });
+
+    if(jornadaIdPreferida && jornadasCache.some(j => String(j.id) === String(jornadaIdPreferida))){
+      setVal("jornada_id", jornadaIdPreferida);
+      return;
+    }
+
+    if(jornadasCache.length === 1){
+      setVal("jornada_id", jornadasCache[0].id);
+    }
+  }catch(e){
+    showMsg("Não foi possível carregar a jornada deste funcionário: " + e.message, false);
+  }
+}
+
+function limpar(){
+  form.reset();
+  setVal("id","");
+  setChecked("exige_ponto", true);
+  setChecked("permite_hora_extra", true);
+  setVal("tipo_vinculo","clt");
+  setVal("status_vinculo","ativo");
+  limparValoresDoCargo();
+  limparJornada();
+  clearMsg();
+}
+
+async function preencher(obj){
+  setVal("id", obj.id);
+  for(const [key,cfg] of Object.entries(fields)){
+    if(key === "salario_base" || key === "bonus_base" || key === "carga_horaria_semanal" || key === "tipo_calculo") continue;
+    if(cfg.type === "checkbox") setChecked(cfg.id, obj[key]);
+    else if(cfg.type === "number") setVal(cfg.id, formatNum(obj[key]));
+    else setVal(cfg.id, obj[key]);
+  }
+
+  await carregarJornadasDoFuncionario(obj.funcionario_cpf, obj.jornada_id);
+  aplicarCargoSelecionado();
+}
+
+async function carregarListas(){
+  clearMsg();
+  const avisos = [];
+
+  try{
+    const data = await postJson(LISTAR_FUNCIONARIOS_WEBHOOK, {});
+    const list = extractList(data);
+    fillSelect("sel-funcionario", list, {
+      valueFields:["CPF","cpf","funcionario_cpf"],
+      labelFields:["Nome","nome","funcionario_nome"],
+      first:"Selecione um funcionário"
+    });
+  }catch(e){ avisos.push("Funcionários: " + e.message); }
+
+  try{
+    const data = await postJson(LISTAR_EMPRESAS_WEBHOOK, {});
+    const list = extractList(data);
+    fillSelect("empresa_id", list, {
+      valueFields:["id"],
+      labelFields:["empresas","empresa","nome"],
+      first:"Selecione uma empresa"
+    });
+  }catch(e){ avisos.push("Empresas: " + e.message); }
+
+  try{
+    const data = await postJson(LISTAR_CARGOS_WEBHOOK, {});
+    cargosCache = extractList(data);
+    fillSelect("cargo_id", cargosCache, {
+      valueFields:["id"],
+      labelFields:["Cargo","cargo"],
+      first:"Selecione um cargo"
+    });
+  }catch(e){ avisos.push("Cargos: " + e.message); }
+
+  limparJornada();
+
+  if(avisos.length) showMsg("Listas carregadas parcialmente:\n" + avisos.join("\n"), false);
+  else showMsg("Listas carregadas com sucesso. A jornada será carregada ao selecionar o funcionário.", true);
+}
+
+async function buscar(){
+  clearMsg();
+  const cpf = val("sel-funcionario") || val("funcionario_cpf");
+  if(!cpf){ showMsg("Selecione ou informe um funcionário.", false); return; }
+
+  try{
+    const data = await postJson(BUSCAR_VINCULO_WEBHOOK, { funcionario_cpf: cpf });
+    const list = extractList(data);
+    const obj = list[0] || data;
+    if(!obj || typeof obj !== "object"){ showMsg("Vínculo não encontrado.", false); return; }
+    await preencher(obj);
+    showMsg("Vínculo carregado. Valores salariais foram atualizados conforme o cargo selecionado.", true);
+  }catch(e){ showMsg(e.message, false); }
+}
+
+async function salvar(ev){
+  ev.preventDefault();
+  clearMsg();
+
+  if(!val("cargo_id")){
+    showMsg("Selecione um cargo. Os valores salariais dependem do cargo.", false);
+    return;
+  }
+
+  const payload = payloadFromFields(fields);
+  payload.id = val("id") || null;
+
+  try{
+    const data = await postJson(SALVAR_VINCULO_WEBHOOK, payload);
+    showMsg((data && data.message) || "Vínculo salvo com sucesso.", true);
+    if(data && data.id) setVal("id", data.id);
+    aplicarCargoSelecionado();
+  }catch(e){ showMsg(e.message, false); }
+}
+
+async function selecionarFuncionario(){
+  const cpf = val("sel-funcionario");
+  setVal("funcionario_cpf", cpf);
+  await carregarJornadasDoFuncionario(cpf);
+}
+
+document.getElementById("btn-carregar").addEventListener("click", carregarListas);
+document.getElementById("btn-buscar").addEventListener("click", buscar);
+document.getElementById("btn-novo").addEventListener("click", limpar);
+document.getElementById("btn-limpar").addEventListener("click", limpar);
+document.getElementById("sel-funcionario").addEventListener("change", selecionarFuncionario);
+document.getElementById("cargo_id").addEventListener("change", aplicarCargoSelecionado);
+form.addEventListener("submit", salvar);
+document.addEventListener("DOMContentLoaded", carregarListas);
+</script>
+
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

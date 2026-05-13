@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jornadas</title>
+  <style>
+    :root{
+      --brand:#c8102e; --accent:#1a73e8; --text:#1f2937; --muted:#64748b;
+      --line:#e5e7eb; --bg:#f6f7fb; --card:#fff; --shadow:0 8px 24px rgba(2,6,23,.08);
+      --success:#d1e7dd; --success-text:#0f5132; --error:#f8d7da; --error-text:#842029;
+      --warn:#fff3cd; --warn-text:#664d03;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+    .topbar-inner{max-width:1180px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand-wrap{display:flex;align-items:center;gap:12px}
+    .brand-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(180deg,#fff,#f3f4f6);display:grid;place-items:center;border:1px solid var(--line);font-size:26px}
+    .brand-title{display:flex;flex-direction:column;line-height:1.15}.brand-title strong{font-size:18px;font-weight:900}.brand-title span{color:var(--muted);font-size:13px}
+    .container{max-width:1180px;margin:28px auto 48px;padding:0 18px}
+    .page-title,.card{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .page-title{border-radius:22px;padding:22px;margin-bottom:18px}.page-title h1{margin:0 0 6px;font-size:clamp(26px,4vw,38px);letter-spacing:-.035em}.page-title p{margin:0;color:var(--muted)}
+    .card{border-radius:16px;padding:18px;margin-bottom:16px}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .btn{appearance:none;border:none;text-decoration:none;cursor:pointer;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#eef2f7;color:#111827}
+    .btn:hover{background:#dde5f0}.btn.primary{background:linear-gradient(180deg,#d92540,var(--brand));color:#fff}.btn.blue{background:linear-gradient(180deg,#2a85ff,#1a73e8);color:#fff}.btn.green{background:#198754;color:#fff}
+    .combo-top{flex:1;min-width:260px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#eef2ff;font-size:15px}
+    .form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px 10px;align-items:end}.form-group{display:flex;flex-direction:column}
+    .span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+    label{font-size:11px;font-weight:800;color:#495468;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    input,select,textarea{width:100%;padding:9px 10px;border:1px solid #d0d7de;border-radius:8px;background:#fff;font-size:14px;min-height:40px}
+    textarea{min-height:96px;resize:vertical}.readonly,[disabled]{background:#eceff3!important;cursor:not-allowed}
+    .req::after{content:" *";color:#d00000}.help-tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#facc15;color:#3b2f00;font-size:11px;font-weight:900;cursor:help;border:1px solid #eab308}
+    .note{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:12px;margin-bottom:14px;line-height:1.45;font-size:14px}.note.info{background:#eef6ff;border-color:#bfd7ff;color:#114b8c}
+    .status{display:none;padding:12px;border-radius:10px;margin-top:14px;font-weight:800;white-space:pre-wrap}.status.success{display:block;background:var(--success);color:var(--success-text)}.status.error{display:block;background:var(--error);color:var(--error-text)}.status.warn{display:block;background:var(--warn);color:var(--warn-text)}
+    .actions{margin-top:16px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.switch-wrap{display:flex;align-items:center;gap:10px;min-height:40px}.switch-wrap input[type=checkbox]{width:18px;height:18px;min-height:auto;accent-color:#198754}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;font-size:13px;vertical-align:top}th{background:#f8fafc;font-weight:900;color:#374151;white-space:nowrap}
+    .info-box{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}.info-item{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px 12px}.info-item .k{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:4px}.info-item .v{font-size:14px;font-weight:800}.info-item .v.muted{color:#64748b}
+    .field-warning{border-color:#f59e0b!important;background:#fff7ed!important}.row-disabled input{background:#f3f4f6}.modelo-bloqueado .entrada_prevista,.modelo-bloqueado .saida_prevista{background:#eceff3!important;cursor:not-allowed}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.modal-backdrop.show{display:flex}.modal{width:min(560px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.25);border:1px solid var(--line);overflow:hidden}.modal-head{padding:16px 18px;background:#fff7ed;border-bottom:1px solid #fed7aa;font-weight:900;color:#9a3412}.modal-body{padding:18px;color:#334155;line-height:1.55;white-space:pre-wrap}.modal-actions{padding:14px 18px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line)}
+    @media(max-width:900px){.form-grid{grid-template-columns:1fr}.span-2,.span-3,.span-4,.span-6,.span-8,.span-12{grid-column:span 1}.topbar-inner{align-items:flex-start;flex-direction:column}.info-box{grid-template-columns:1fr 1fr}}@media(max-width:640px){.info-box{grid-template-columns:1fr}}
+  
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="topbar"><div class="topbar-inner"><div class="brand-wrap"><div class="brand-logo">🐻</div><div class="brand-title"><strong>Maple Bear Jardins · RH</strong><span>Sistema de funcionários, vínculos, jornadas e documentos</span></div></div><div class="toolbar" style="margin:0"><a class="btn" href="index.html">↩ Início</a><button class="btn" onclick="(function(){localStorage.removeItem('mb_logged_in');window.location.href='login.html';})()" style="margin-left:auto">Sair</button></div></div></div>
+
+  <main class="container">
+    <section class="page-title"><h1>Jornadas</h1><p>Cadastro e edição das jornadas e dias de trabalho dos funcionários.</p></section>
+
+    <section class="card">
+      <div class="note">Esta tela edita <strong>jornadas</strong> e <strong>dias da jornada</strong>. Use modelos existentes para padronizar horários e evitar duplicidade.</div>
+
+      <div class="toolbar">
+        <a href="index.html" class="btn">↩ Retornar</a>
+        <button type="button" class="btn blue" id="btn-carregar">Carregar listas</button>
+        <button type="button" class="btn" id="btn-buscar">Buscar jornada</button>
+        <button type="button" class="btn green" id="btn-nova">Nova jornada</button>
+        <select id="sel-funcionario" class="combo-top"><option value="">Carregue funcionários...</option></select>
+        <select id="sel-jornada" class="combo-top"><option value="">Carregue jornadas...</option></select>
+      </div>
+
+      <div class="note info"><strong>Regra:</strong> se selecionar um modelo existente, dias trabalhados, entrada e saída são preenchidos e bloqueados. Almoço e intervalo continuam editáveis. Se for uma jornada nova, escolha “Sem modelo / criar nova jornada”.</div>
+
+      <div class="info-box">
+        <div class="info-item"><div class="k">Funcionário</div><div class="v muted" id="resumo-funcionario">Não selecionado</div></div>
+        <div class="info-item"><div class="k">Cargo</div><div class="v muted" id="resumo-cargo">Não identificado</div></div>
+        <div class="info-item"><div class="k">Tipo de cálculo</div><div class="v muted" id="resumo-tipo-calculo">Não identificado</div></div>
+        <div class="info-item"><div class="k">Carga semanal esperada</div><div class="v muted" id="resumo-carga-semanal">Não identificada</div></div>
+      </div>
+
+      <form id="form-jornada">
+        <input type="hidden" id="id">
+        <h2>Dados da jornada</h2>
+        <div class="form-grid">
+          <div class="form-group span-4">
+            <label class="req" for="funcionario_cpf">Funcionário CPF <span class="help-tip" title="CPF do funcionário desta jornada. Vem automaticamente ao escolher o funcionário. Exemplo: 426.487.608-73">?</span></label>
+            <input id="funcionario_cpf" required readonly class="readonly">
+          </div>
+
+          <div class="form-group span-4">
+            <label for="modelo_jornada">Modelo de jornada existente <span class="help-tip" title="Escolha uma jornada já usada no sistema para copiar dias, entrada e saída. Exemplo: Jornada Fixa | 07:30 às 17:30.">?</span></label>
+            <select id="modelo_jornada"><option value="">Sem modelo / criar nova jornada</option></select>
+          </div>
+
+          <div class="form-group span-4">
+            <label class="req" for="nome_jornada">Nome da jornada <span class="help-tip" title="Se usar modelo, será preenchido e bloqueado. Se for nova, use nome claro. Exemplo: Jornada Fixa 07:30 às 17:30">?</span></label>
+            <input id="nome_jornada" required>
+          </div>
+
+          <div class="form-group span-4">
+            <label for="tipo_jornada">Tipo jornada <span class="help-tip" title="Classificação da jornada. Exemplo: fixa, estagiário, aulista.">?</span></label>
+            <select id="tipo_jornada"><option value="fixa">Fixa</option><option value="flexivel">Flexível</option><option value="escala">Escala</option><option value="aulista">Aulista</option><option value="estagiario">Estagiário</option></select>
+          </div>
+
+          <div class="form-group span-2"><label for="data_inicio">Data início <span class="help-tip" title="Data em que esta jornada começa a valer. Exemplo: 2026-04-01">?</span></label><input type="date" id="data_inicio"></div>
+          <div class="form-group span-2"><label for="data_fim">Data fim <span class="help-tip" title="Preencha somente se tiver fim previsto. Exemplo: 2026-12-31">?</span></label><input type="date" id="data_fim"></div>
+          <div class="form-group span-2"><label for="tolerancia_entrada_min">Tol. entrada <span class="help-tip" title="Minutos de tolerância na entrada. Exemplo: 5">?</span></label><input type="number" id="tolerancia_entrada_min" value="5"></div>
+          <div class="form-group span-2"><label for="tolerancia_saida_min">Tol. saída <span class="help-tip" title="Minutos de tolerância na saída. Exemplo: 5">?</span></label><input type="number" id="tolerancia_saida_min" value="5"></div>
+          <div class="form-group span-2"><label>Ativa <span class="help-tip" title="Marque Sim quando esta jornada estiver em uso.">?</span></label><div class="switch-wrap"><input type="checkbox" id="ativa" checked><span>Sim</span></div></div>
+
+          <div class="form-group span-3"><label>Exige almoço <span class="help-tip" title="Use Sim quando houver pausa de almoço obrigatória. Exemplo: jornada integral.">?</span></label><div class="switch-wrap"><input type="checkbox" id="exige_almoco" checked><span>Sim</span></div></div>
+          <div class="form-group span-3"><label for="almoco_tipo">Tipo almoço <span class="help-tip" title="Fixo = horário exato; Duração = só controla minutos; Não aplica = sem almoço.">?</span></label><select id="almoco_tipo"><option value="fixo">Fixo</option><option value="duracao">Duração</option><option value="nao_aplica">Não aplica</option></select></div>
+          <div class="form-group span-3"><label for="almoco_minutos_obrigatorios">Min. almoço <span class="help-tip" title="Quantidade mínima de almoço. Preenche os dias automaticamente. Exemplo: 60">?</span></label><input type="number" id="almoco_minutos_obrigatorios" value="60"></div>
+          <div class="form-group span-3"><label>Exige intervalo curto <span class="help-tip" title="Use Sim se houver pausa curta obrigatória além do almoço. Exemplo: 15 minutos.">?</span></label><div class="switch-wrap"><input type="checkbox" id="exige_intervalo_curto"><span>Sim</span></div></div>
+          <div class="form-group span-3"><label for="intervalo_curto_minutos_obrigatorios">Min. intervalo curto <span class="help-tip" title="Quantidade mínima do intervalo curto. Exemplo: 15">?</span></label><input type="number" id="intervalo_curto_minutos_obrigatorios" value="15"></div>
+          <div class="form-group span-12"><label for="observacoes">Observações <span class="help-tip" title="Use para justificar exceções. Exemplo: Jornada temporária até 30/06.">?</span></label><textarea id="observacoes"></textarea></div>
+        </div>
+
+        <h2>Dias da semana</h2>
+        <div class="table-wrap">
+          <table id="dias-table"><thead><tr><th>Dia</th><th>Trabalha</th><th>Entrada</th><th>Saída</th><th>Almoço início</th><th>Almoço fim</th><th>Min. almoço</th><th>Intervalo curto</th><th>Carga min.</th></tr></thead><tbody></tbody></table>
+        </div>
+
+        <div id="status-message" class="status"></div>
+        <div class="actions"><button type="button" class="btn" id="btn-replicar">Replicar segunda para sexta</button><button type="button" class="btn" id="btn-limpar">Limpar</button><button type="submit" class="btn primary">Salvar jornada</button></div>
+      </form>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="alert-modal"><div class="modal"><div class="modal-head">Atenção</div><div class="modal-body" id="alert-modal-text"></div><div class="modal-actions"><button type="button" class="btn primary" id="alert-modal-ok">Entendi</button></div></div></div>
+
+<script>
+const LISTAR_FUNCIONARIOS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/e1fb46c9-bc88-4de1-96f2-a83a5370d101";
+const LISTAR_JORNADAS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_jornadas_listar_001";
+const BUSCAR_JORNADA_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_jornadas_buscar_001";
+const SALVAR_JORNADA_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_jornadas_salvar_001";
+const BUSCAR_VINCULO_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_vinculos_buscar_001";
+const LISTAR_MODELOS_JORNADA_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/rh_jornadas_modelos_listar_001";
+
+const dias = [[0,"Domingo"],[1,"Segunda"],[2,"Terça"],[3,"Quarta"],[4,"Quinta"],[5,"Sexta"],[6,"Sábado"]];
+let vinculoAtual = null;
+let funcionariosCache = [];
+let modelosJornadaCache = [];
+let modeloJornadaAtual = null;
+
+function val(id){return document.getElementById(id)?.value ?? ""}
+function setVal(id,value){const el=document.getElementById(id); if(el) el.value=value ?? ""}
+function setText(id,value,muted=false){const el=document.getElementById(id); if(el){el.textContent=value||""; el.classList.toggle("muted",!!muted)}}
+function onlyDigits(v){return String(v??"").replace(/\D/g,"")}
+function parseNum(v){const s=String(v??"").trim(); if(!s) return null; const n=Number(s.replace(/\./g,"").replace(",",".")); return Number.isFinite(n)?n:null}
+function setChecked(id,value){const el=document.getElementById(id); if(el) el.checked=value===true||value==="true"||value===1||value==="1"||value==="Sim"||value==="sim"}
+function getChecked(id){return !!document.getElementById(id)?.checked}
+function showMsg(msg,ok=true,type=null){const el=document.getElementById("status-message"); if(!el)return; el.textContent=typeof msg==="string"?msg:JSON.stringify(msg,null,2); el.className="status "+(type||(ok?"success":"error"))}
+function clearMsg(){const el=document.getElementById("status-message"); if(el){el.textContent=""; el.className="status"}}
+function showAlert(msg){document.getElementById("alert-modal-text").textContent=msg; document.getElementById("alert-modal").classList.add("show")}
+function closeAlert(){document.getElementById("alert-modal").classList.remove("show")}
+function isPlaceholder(url){return !url||url.includes("COLE_AQUI")}
+function extractList(data){if(Array.isArray(data))return data; if(data&&typeof data==="object"){for(const k of ["data","items","rows","result","records","body","output"]){if(Array.isArray(data[k]))return data[k]}} return []}
+async function postJson(url,payload={}){if(isPlaceholder(url))throw new Error("Endpoint não configurado: "+url); const res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}); const text=await res.text(); let data; try{data=JSON.parse(text)}catch{data=text} if(!res.ok){throw new Error((data&&(data.message||data.error))||text||"Falha na requisição.")} return data}
+function optionText(item,fields){for(const f of fields){const value=item?.[f]; if(value!==undefined&&value!==null&&String(value).trim()!=="")return String(value).trim()} return ""}
+function fillSelect(id,list,config={}){const sel=document.getElementById(id); if(!sel)return; const {valueFields=["id"],labelFields=["nome","Nome"],first="Selecione"}=config; sel.innerHTML=""; const o=document.createElement("option"); o.value=""; o.textContent=first; sel.appendChild(o); list.forEach(item=>{const label=optionText(item,labelFields); let value=optionText(item,valueFields); if(!value&&item?.id!==undefined)value=String(item.id); if(!label&&!value)return; const opt=document.createElement("option"); opt.value=value||label; opt.textContent=label||value; sel.appendChild(opt)})}
+function toMinutes(hhmm){if(!hhmm)return null; const [h,m]=String(hhmm).split(":").map(Number); if(!Number.isFinite(h)||!Number.isFinite(m))return null; return h*60+m}
+function formatMinToHour(min){if(min===null||min===undefined||!Number.isFinite(min))return ""; const h=Math.floor(min/60); const m=Math.abs(min%60); return `${h}h${String(m).padStart(2,"0")}`}
+function setInputEnabled(el,enabled){if(el){el.disabled=!enabled; el.classList.toggle("readonly",!enabled)}}
+
+function criarTabelaDias(){
+  const tbody=document.querySelector("#dias-table tbody");
+  tbody.innerHTML=dias.map(([num,nome])=>`
+    <tr data-dia="${num}">
+      <td><strong>${nome}</strong><input type="hidden" class="dia_semana" value="${num}"></td>
+      <td><input type="checkbox" class="trabalha" ${num>=1&&num<=5?"checked":""}></td>
+      <td><input type="time" class="entrada_prevista"></td>
+      <td><input type="time" class="saida_prevista"></td>
+      <td><input type="time" class="almoco_inicio_previsto"></td>
+      <td><input type="time" class="almoco_fim_previsto"></td>
+      <td><input type="number" class="almoco_minutos_obrigatorios"></td>
+      <td><input type="number" class="intervalo_curto_minutos_obrigatorios"></td>
+      <td><input type="number" class="carga_prevista_minutos" readonly></td>
+    </tr>`).join("");
+  bindRowEvents();
+  aplicarRegrasGeraisNaTabela();
+  recalcularTudo();
+}
+
+function limparResumoVinculo(){
+  vinculoAtual=null;
+  setText("resumo-funcionario","Não selecionado",true);
+  setText("resumo-cargo","Não identificado",true);
+  setText("resumo-tipo-calculo","Não identificado",true);
+  setText("resumo-carga-semanal","Não identificada",true);
+}
+
+function limpar(){
+  document.getElementById("form-jornada").reset();
+  setVal("id","");
+  setVal("modelo_jornada","");
+  modeloJornadaAtual=null;
+  setModeloCamposBloqueados(false);
+  setChecked("ativa",true);
+  setChecked("exige_almoco",true);
+  setChecked("exige_intervalo_curto",false);
+  setVal("tipo_jornada","fixa");
+  setVal("almoco_tipo","duracao");
+  setVal("tolerancia_entrada_min",5);
+  setVal("tolerancia_saida_min",5);
+  setVal("almoco_minutos_obrigatorios",60);
+  setVal("intervalo_curto_minutos_obrigatorios",15);
+  criarTabelaDias();
+  limparResumoVinculo();
+  clearMsg();
+}
+
+function setModeloCamposBloqueados(bloquear){
+  const nome=document.getElementById("nome_jornada");
+  const tipo=document.getElementById("tipo_jornada");
+  if(nome){nome.readOnly=!!bloquear; nome.classList.toggle("readonly",!!bloquear)}
+  if(tipo){tipo.disabled=!!bloquear; tipo.classList.toggle("readonly",!!bloquear)}
+  document.querySelectorAll("#dias-table tbody tr").forEach(aplicarRegrasLinha);
+}
+
+function modeloDiasArray(modelo){
+  let ds=modelo?.dias;
+  if(typeof ds==="string"){try{ds=JSON.parse(ds)}catch{ds=[]}}
+  return Array.isArray(ds)?ds:[];
+}
+
+function aplicarModeloJornada(){
+  const modeloId=val("modelo_jornada");
+  if(!modeloId){
+    modeloJornadaAtual=null;
+    setModeloCamposBloqueados(false);
+    aplicarRegrasGeraisNaTabela();
+    recalcularTudo();
+    return;
+  }
+  const modelo=modelosJornadaCache.find(m=>String(m.modelo_id)===String(modeloId));
+  if(!modelo){showMsg("Modelo de jornada não encontrado. Clique em Carregar listas novamente.",false); return}
+  modeloJornadaAtual=modelo;
+  setVal("nome_jornada",modelo.nome_jornada||"");
+  setVal("tipo_jornada",modelo.tipo_jornada||"fixa");
+  modeloDiasArray(modelo).forEach(d=>{
+    const tr=document.querySelector(`#dias-table tbody tr[data-dia="${d.dia_semana}"]`);
+    if(!tr)return;
+    const trabalha=d.trabalha===true||d.trabalha==="true"||d.trabalha===1||d.trabalha==="1";
+    tr.querySelector(".trabalha").checked=trabalha;
+    tr.querySelector(".entrada_prevista").value=d.entrada_prevista||"";
+    tr.querySelector(".saida_prevista").value=d.saida_prevista||"";
+    tr.querySelector(".almoco_inicio_previsto").value="";
+    tr.querySelector(".almoco_fim_previsto").value="";
+  });
+  setModeloCamposBloqueados(true);
+  aplicarRegrasGeraisNaTabela();
+  recalcularTudo();
+  showMsg("Modelo aplicado. Dias, entrada e saída foram preenchidos e bloqueados. Ajuste almoço/intervalo se necessário.",true,"success");
+}
+
+function jornadaPayload(){
+  return {
+    id: val("id") || null,
+    funcionario_cpf: val("funcionario_cpf"),
+    nome_jornada: val("nome_jornada"),
+    tipo_jornada: val("tipo_jornada"),
+    data_inicio: val("data_inicio") || null,
+    data_fim: val("data_fim") || null,
+    ativa: getChecked("ativa"),
+    tolerancia_entrada_min: parseNum(val("tolerancia_entrada_min")),
+    tolerancia_saida_min: parseNum(val("tolerancia_saida_min")),
+    exige_almoco: getChecked("exige_almoco"),
+    almoco_tipo: val("almoco_tipo"),
+    almoco_minutos_obrigatorios: parseNum(val("almoco_minutos_obrigatorios")),
+    exige_intervalo_curto: getChecked("exige_intervalo_curto"),
+    intervalo_curto_minutos_obrigatorios: parseNum(val("intervalo_curto_minutos_obrigatorios")),
+    observacoes: val("observacoes") || null
+  };
+}
+
+function diasPayload(){
+  return Array.from(document.querySelectorAll("#dias-table tbody tr")).map(tr=>({
+    dia_semana:Number(tr.dataset.dia),
+    trabalha:tr.querySelector(".trabalha").checked,
+    entrada_prevista:tr.querySelector(".entrada_prevista").value || null,
+    saida_prevista:tr.querySelector(".saida_prevista").value || null,
+    almoco_inicio_previsto:tr.querySelector(".almoco_inicio_previsto").value || null,
+    almoco_fim_previsto:tr.querySelector(".almoco_fim_previsto").value || null,
+    almoco_minutos_obrigatorios:parseNum(tr.querySelector(".almoco_minutos_obrigatorios").value),
+    intervalo_curto_minutos_obrigatorios:parseNum(tr.querySelector(".intervalo_curto_minutos_obrigatorios").value),
+    carga_prevista_minutos:parseNum(tr.querySelector(".carga_prevista_minutos").value),
+    observacoes:null
+  }));
+}
+
+function preencher(data){
+  modeloJornadaAtual=null;
+  setVal("modelo_jornada","");
+  setModeloCamposBloqueados(false);
+  const j=data.jornada||data;
+  setVal("id",j.id);
+  setVal("funcionario_cpf",j.funcionario_cpf);
+  setVal("nome_jornada",j.nome_jornada);
+  setVal("tipo_jornada",j.tipo_jornada||"fixa");
+  setVal("data_inicio",j.data_inicio);
+  setVal("data_fim",j.data_fim);
+  setChecked("ativa",j.ativa);
+  setVal("tolerancia_entrada_min",j.tolerancia_entrada_min??5);
+  setVal("tolerancia_saida_min",j.tolerancia_saida_min??5);
+  setChecked("exige_almoco",j.exige_almoco);
+  setVal("almoco_tipo",j.almoco_tipo||"duracao");
+  setVal("almoco_minutos_obrigatorios",j.almoco_minutos_obrigatorios??60);
+  setChecked("exige_intervalo_curto",j.exige_intervalo_curto);
+  setVal("intervalo_curto_minutos_obrigatorios",j.intervalo_curto_minutos_obrigatorios??15);
+  setVal("observacoes",j.observacoes);
+  const listaDias=data.dias||data.jornada_dias||[];
+  listaDias.forEach(d=>{
+    const tr=document.querySelector(`#dias-table tbody tr[data-dia="${d.dia_semana}"]`);
+    if(!tr)return;
+    tr.querySelector(".trabalha").checked=!!d.trabalha;
+    tr.querySelector(".entrada_prevista").value=d.entrada_prevista||"";
+    tr.querySelector(".saida_prevista").value=d.saida_prevista||"";
+    tr.querySelector(".almoco_inicio_previsto").value=d.almoco_inicio_previsto||"";
+    tr.querySelector(".almoco_fim_previsto").value=d.almoco_fim_previsto||"";
+    tr.querySelector(".almoco_minutos_obrigatorios").value=d.almoco_minutos_obrigatorios??"";
+    tr.querySelector(".intervalo_curto_minutos_obrigatorios").value=d.intervalo_curto_minutos_obrigatorios??"";
+    tr.querySelector(".carga_prevista_minutos").value=d.carga_prevista_minutos??"";
+  });
+  aplicarRegrasGeraisNaTabela();
+  recalcularTudo();
+}
+
+function nomeFuncionarioPorCpf(cpf){
+  const c=onlyDigits(cpf);
+  const item=funcionariosCache.find(f=>onlyDigits(f.CPF||f.cpf||f.funcionario_cpf)===c);
+  return item?optionText(item,["Nome","nome","funcionario_nome"]):"";
+}
+
+function extrairPrimeiroRegistro(data){
+  if(Array.isArray(data))return data[0]||null;
+  const list=extractList(data);
+  if(list.length)return list[0];
+  return data&&typeof data==="object"?data:null;
+}
+
+function atualizarResumoVinculo(item,cpf){
+  vinculoAtual=item||null;
+  const nome=nomeFuncionarioPorCpf(cpf)||cpf||"Não selecionado";
+  setText("resumo-funcionario",nome,!cpf);
+  const cargo=optionText(item||{},["cargo_nome","cargo","nome_cargo"])||"Não identificado";
+  const tipo=optionText(item||{},["tipo_calculo"])||"Não identificado";
+  const carga=item&&item.carga_horaria_semanal!=null?`${item.carga_horaria_semanal}h/sem`:"Não identificada";
+  setText("resumo-cargo",cargo,cargo==="Não identificado");
+  setText("resumo-tipo-calculo",tipo,tipo==="Não identificado");
+  setText("resumo-carga-semanal",carga,carga==="Não identificada");
+}
+
+async function carregarVinculoDoFuncionario(cpf){
+  if(!onlyDigits(cpf)){atualizarResumoVinculo(null,""); return}
+  try{
+    const data=await postJson(BUSCAR_VINCULO_WEBHOOK,{funcionario_cpf:cpf});
+    const item=extrairPrimeiroRegistro(data);
+    atualizarResumoVinculo(item,cpf);
+    if((item?.tipo_vinculo||"")==="estagio") setVal("tipo_jornada","estagiario");
+    else if((item?.tipo_vinculo||"")==="aulista") setVal("tipo_jornada","aulista");
+    recalcularTudo();
+  }catch(e){
+    atualizarResumoVinculo(null,cpf);
+    showMsg("Não foi possível carregar vínculo do funcionário. A validação por carga semanal pode ficar indisponível.\n"+e.message,true,"warn");
+  }
+}
+
+function bindRowEvents(){
+  document.querySelectorAll("#dias-table tbody tr").forEach(tr=>{
+    tr.querySelectorAll("input").forEach(input=>{
+      input.addEventListener("change",()=>{if(input.classList.contains("trabalha"))aplicarRegrasLinha(tr); recalcularTudo()});
+      input.addEventListener("input",()=>recalcularTudo());
+    });
+  });
+}
+
+function aplicarRegrasLinha(tr){
+  const trabalha=tr.querySelector(".trabalha").checked;
+  tr.classList.toggle("row-disabled",!trabalha);
+  const entrada=tr.querySelector(".entrada_prevista"), saida=tr.querySelector(".saida_prevista"), ai=tr.querySelector(".almoco_inicio_previsto"), af=tr.querySelector(".almoco_fim_previsto"), alm=tr.querySelector(".almoco_minutos_obrigatorios"), curto=tr.querySelector(".intervalo_curto_minutos_obrigatorios"), carga=tr.querySelector(".carga_prevista_minutos");
+  if(!trabalha){[entrada,saida,ai,af,alm,curto,carga].forEach(el=>el.value="")}
+  else{
+    if(getChecked("exige_almoco")&&!alm.value) alm.value=val("almoco_minutos_obrigatorios")||"60";
+    if(getChecked("exige_intervalo_curto")&&!curto.value) curto.value=val("intervalo_curto_minutos_obrigatorios")||"15";
+  }
+  const almocoAtivo=trabalha&&getChecked("exige_almoco");
+  const curtoAtivo=trabalha&&getChecked("exige_intervalo_curto");
+  setInputEnabled(tr.querySelector(".trabalha"), !modeloJornadaAtual);
+  setInputEnabled(entrada, trabalha && !modeloJornadaAtual);
+  setInputEnabled(saida, trabalha && !modeloJornadaAtual);
+  setInputEnabled(ai, almocoAtivo && val("almoco_tipo")==="fixo");
+  setInputEnabled(af, almocoAtivo && val("almoco_tipo")==="fixo");
+  setInputEnabled(alm, almocoAtivo);
+  setInputEnabled(curto, curtoAtivo);
+  setInputEnabled(carga,false);
+  if(!almocoAtivo){ai.value=""; af.value=""; alm.value="0"}
+  if(val("almoco_tipo")!=="fixo"){ai.value=""; af.value=""}
+  if(!curtoAtivo) curto.value="0";
+  tr.classList.toggle("modelo-bloqueado",!!modeloJornadaAtual);
+}
+
+function aplicarRegrasGeraisNaTabela(){document.querySelectorAll("#dias-table tbody tr").forEach(aplicarRegrasLinha)}
+
+function propagarCabecalhoParaLinhas(){
+  const alm=parseNum(val("almoco_minutos_obrigatorios"))||0;
+  const curto=parseNum(val("intervalo_curto_minutos_obrigatorios"))||0;
+  const exigeAlm=getChecked("exige_almoco"), exigeCurto=getChecked("exige_intervalo_curto");
+  document.querySelectorAll("#dias-table tbody tr").forEach(tr=>{
+    if(!tr.querySelector(".trabalha").checked)return;
+    if(!tr.querySelector(".almoco_minutos_obrigatorios").value || document.activeElement.id==="almoco_minutos_obrigatorios") tr.querySelector(".almoco_minutos_obrigatorios").value=exigeAlm?alm:0;
+    if(!tr.querySelector(".intervalo_curto_minutos_obrigatorios").value || document.activeElement.id==="intervalo_curto_minutos_obrigatorios") tr.querySelector(".intervalo_curto_minutos_obrigatorios").value=exigeCurto?curto:0;
+  });
+}
+
+function calcularCargaLinha(tr){
+  tr.querySelectorAll("input").forEach(i=>i.classList.remove("field-warning"));
+  if(!tr.querySelector(".trabalha").checked){tr.querySelector(".carga_prevista_minutos").value=""; return 0}
+  const entrada=toMinutes(tr.querySelector(".entrada_prevista").value), saida=toMinutes(tr.querySelector(".saida_prevista").value);
+  if(entrada===null||saida===null){tr.querySelector(".carga_prevista_minutos").value=""; return 0}
+  if(saida<=entrada){tr.querySelector(".saida_prevista").classList.add("field-warning"); tr.querySelector(".carga_prevista_minutos").value=""; return 0}
+  let pausa=0;
+  if(getChecked("exige_almoco")){
+    if(val("almoco_tipo")==="fixo"){
+      const ai=toMinutes(tr.querySelector(".almoco_inicio_previsto").value), af=toMinutes(tr.querySelector(".almoco_fim_previsto").value);
+      pausa=(ai!==null&&af!==null&&af>ai)?af-ai:(parseNum(tr.querySelector(".almoco_minutos_obrigatorios").value)||0);
+    } else pausa=parseNum(tr.querySelector(".almoco_minutos_obrigatorios").value)||0;
+  }
+  const curto=getChecked("exige_intervalo_curto")?(parseNum(tr.querySelector(".intervalo_curto_minutos_obrigatorios").value)||0):0;
+  const liquido=Math.max(saida-entrada-pausa-curto,0);
+  tr.querySelector(".carga_prevista_minutos").value=liquido||"";
+  return liquido;
+}
+
+function obterCargaSemanalEsperadaMin(){
+  if(!vinculoAtual)return null;
+  const carga=Number(vinculoAtual.carga_horaria_semanal);
+  return Number.isFinite(carga)?Math.round(carga*60):null;
+}
+
+function recalcularTudo(){
+  propagarCabecalhoParaLinhas();
+  let total=0;
+  document.querySelectorAll("#dias-table tbody tr").forEach(tr=>total+=calcularCargaLinha(tr));
+  const esperado=obterCargaSemanalEsperadaMin();
+  if(esperado!==null){
+    if(total===esperado) showMsg(`Carga semanal calculada: ${formatMinToHour(total)}. Conferência com vínculo/cargo: OK.`,true,"success");
+    else showMsg(`Carga semanal calculada: ${formatMinToHour(total)}. Esperado pelo vínculo/cargo: ${formatMinToHour(esperado)}. Revise antes de salvar.`,true,"warn");
+  }
+}
+
+function validarAntesSalvar(){
+  const erros=[];
+  if(!val("funcionario_cpf"))erros.push("Selecione um funcionário.");
+  if(!val("nome_jornada"))erros.push("Informe o nome da jornada.");
+  let total=0;
+  const linhas=Array.from(document.querySelectorAll("#dias-table tbody tr"));
+  const trabalhados=linhas.filter(tr=>tr.querySelector(".trabalha").checked);
+  if(trabalhados.length===0)erros.push("Marque pelo menos um dia trabalhado.");
+  for(const tr of trabalhados){
+    const dia=tr.querySelector("strong").textContent;
+    const entrada=tr.querySelector(".entrada_prevista").value, saida=tr.querySelector(".saida_prevista").value;
+    if(!entrada||!saida){erros.push(`Preencha entrada e saída em ${dia}.`); continue}
+    const carga=calcularCargaLinha(tr);
+    if(!carga)erros.push(`Revise os horários de ${dia}; a carga calculada ficou inválida.`);
+    total+=carga||0;
+  }
+  const esperado=obterCargaSemanalEsperadaMin();
+  if(esperado!==null&&total!==esperado)erros.push(`A carga semanal da jornada ficou em ${formatMinToHour(total)} (${total} min), mas o vínculo/cargo exige ${formatMinToHour(esperado)} (${esperado} min). Ajuste antes de salvar.`);
+  return {ok:erros.length===0,erros};
+}
+
+async function carregarListas(){
+  const avisos=[];
+  try{
+    const data=await postJson(LISTAR_FUNCIONARIOS_WEBHOOK,{});
+    funcionariosCache=extractList(data);
+    fillSelect("sel-funcionario",funcionariosCache,{valueFields:["CPF","cpf","funcionario_cpf"],labelFields:["Nome","nome","funcionario_nome"],first:"Selecione um funcionário"});
+  }catch(e){avisos.push("Funcionários: "+e.message)}
+  try{
+    const data=await postJson(LISTAR_JORNADAS_WEBHOOK,{});
+    fillSelect("sel-jornada",extractList(data),{valueFields:["id"],labelFields:["label","nome_jornada","funcionario_cpf"],first:"Selecione uma jornada"});
+  }catch(e){avisos.push("Jornadas: "+e.message)}
+  try{
+    const data=await postJson(LISTAR_MODELOS_JORNADA_WEBHOOK,{});
+    modelosJornadaCache=extractList(data);
+    fillSelect("modelo_jornada",modelosJornadaCache,{valueFields:["modelo_id"],labelFields:["label","nome_jornada"],first:"Sem modelo / criar nova jornada"});
+  }catch(e){avisos.push("Modelos de jornada: "+e.message)}
+  if(avisos.length)showMsg("Listas carregadas parcialmente:\n"+avisos.join("\n"),false);
+  else showMsg("Listas carregadas.",true);
+}
+
+async function carregarJornadasDoFuncionario(){
+  const cpf=val("funcionario_cpf")||val("sel-funcionario");
+  if(!cpf)return;
+  try{
+    const data=await postJson(LISTAR_JORNADAS_WEBHOOK,{funcionario_cpf:cpf});
+    const lista=extractList(data);
+    fillSelect("sel-jornada",lista,{valueFields:["id"],labelFields:["label","nome_jornada","funcionario_cpf"],first:"Selecione uma jornada"});
+    if(lista.length===1)setVal("sel-jornada",lista[0].id);
+  }catch(e){showMsg("Não foi possível carregar jornadas do funcionário: "+e.message,false)}
+}
+
+async function buscar(){
+  clearMsg();
+  const payload={id:val("sel-jornada")||val("id"), funcionario_cpf:val("funcionario_cpf")||val("sel-funcionario")};
+  try{
+    const data=await postJson(BUSCAR_JORNADA_WEBHOOK,payload);
+    const obj=Array.isArray(data)?data[0]:(extractList(data)[0]||data);
+    if(!obj||!obj.jornada){showMsg("Nenhuma jornada encontrada para este funcionário.",false); return}
+    preencher(obj);
+    await carregarVinculoDoFuncionario(val("funcionario_cpf"));
+    showMsg("Jornada carregada.",true);
+  }catch(e){showMsg(e.message,false)}
+}
+
+function replicarSegunda(){
+  if(modeloJornadaAtual){showAlert('Esta jornada está usando um modelo existente. Para alterar dias, entrada ou saída, escolha "Sem modelo / criar nova jornada".'); return}
+  const segunda=document.querySelector('#dias-table tbody tr[data-dia="1"]');
+  if(!segunda)return;
+  const classes=["entrada_prevista","saida_prevista","almoco_inicio_previsto","almoco_fim_previsto","almoco_minutos_obrigatorios","intervalo_curto_minutos_obrigatorios"];
+  for(let dia=2;dia<=5;dia++){
+    const tr=document.querySelector(`#dias-table tbody tr[data-dia="${dia}"]`);
+    tr.querySelector(".trabalha").checked=segunda.querySelector(".trabalha").checked;
+    for(const cls of classes)tr.querySelector("."+cls).value=segunda.querySelector("."+cls).value;
+    aplicarRegrasLinha(tr);
+  }
+  recalcularTudo();
+}
+
+async function salvar(ev){
+  ev.preventDefault();
+  clearMsg();
+  const validacao=validarAntesSalvar();
+  if(!validacao.ok){showAlert(validacao.erros.join("\n\n")); showMsg("Corrija as inconsistências antes de salvar.",false); return}
+  const payload={jornada:jornadaPayload(),dias:diasPayload()};
+  try{
+    const data=await postJson(SALVAR_JORNADA_WEBHOOK,payload);
+    const obj=Array.isArray(data)?data[0]:(extractList(data)[0]||data);
+    if(obj&&obj.jornada){preencher(obj); setVal("sel-jornada",obj.jornada.id||"")}
+    showMsg((obj&&obj.message)||"Jornada salva com sucesso.",true);
+    await carregarJornadasDoFuncionario();
+  }catch(e){showMsg(e.message,false)}
+}
+
+["exige_almoco","exige_intervalo_curto","almoco_tipo","almoco_minutos_obrigatorios","intervalo_curto_minutos_obrigatorios","tipo_jornada"].forEach(id=>{
+  document.addEventListener("DOMContentLoaded",()=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener("change",()=>{
+      if(id==="exige_almoco"&&!getChecked("exige_almoco"))setVal("almoco_tipo","nao_aplica");
+      if(id==="exige_almoco"&&getChecked("exige_almoco")&&val("almoco_tipo")==="nao_aplica")setVal("almoco_tipo","duracao");
+      aplicarRegrasGeraisNaTabela();
+      recalcularTudo();
+    });
+    el.addEventListener("input",()=>{aplicarRegrasGeraisNaTabela(); recalcularTudo()});
+  });
+});
+
+document.getElementById("btn-carregar").addEventListener("click",carregarListas);
+document.getElementById("btn-buscar").addEventListener("click",buscar);
+document.getElementById("btn-nova").addEventListener("click",limpar);
+document.getElementById("btn-limpar").addEventListener("click",limpar);
+document.getElementById("btn-replicar").addEventListener("click",replicarSegunda);
+document.getElementById("sel-funcionario").addEventListener("change",async()=>{
+  setVal("funcionario_cpf",val("sel-funcionario"));
+  await carregarVinculoDoFuncionario(val("funcionario_cpf"));
+  await carregarJornadasDoFuncionario();
+});
+document.getElementById("sel-jornada").addEventListener("change",()=>setVal("id",val("sel-jornada")));
+document.getElementById("modelo_jornada").addEventListener("change",aplicarModeloJornada);
+document.getElementById("form-jornada").addEventListener("submit",salvar);
+document.getElementById("alert-modal-ok").addEventListener("click",closeAlert);
+document.getElementById("alert-modal").addEventListener("click",e=>{if(e.target.id==="alert-modal")closeAlert()});
+document.addEventListener("DOMContentLoaded",()=>{criarTabelaDias(); limparResumoVinculo(); carregarListas()});
+</script>
+
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

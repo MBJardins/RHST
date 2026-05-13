@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro de Cargos e Salários · Maple Bear Jardins RH</title>
+  <style>
+    :root{
+      --primary:#0d6efd;
+      --primary-hover:#0b5ed7;
+      --secondary:#6c757d;
+      --secondary-hover:#5c636a;
+      --border:#d0d7de;
+      --bg:#f6f7fb;
+      --text:#27303f;
+      --success:#d1e7dd;
+      --success-text:#0f5132;
+      --error:#f8d7da;
+      --error-text:#842029;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      padding:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .container{
+      width:min(1100px, 96%);
+      margin:20px auto;
+      background:#fff;
+      border-radius:10px;
+      padding:20px;
+      box-shadow:0 4px 18px rgba(0,0,0,.08);
+    }
+
+    h1{
+      margin:0 0 18px;
+      text-align:center;
+      font-size:30px;
+    }
+
+    h2{
+      margin:26px 0 14px;
+      font-size:18px;
+      border-bottom:1px solid #ddd;
+      padding-bottom:10px;
+    }
+
+    .top-note{
+      background:#eef4ff;
+      border:1px solid #d8e6ff;
+      color:#204a9a;
+      padding:14px 18px;
+      border-radius:10px;
+      margin-bottom:18px;
+      line-height:1.45;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .combo-top{
+      flex:1;
+      min-width:260px;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:#eef2ff;
+      font-size:16px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:8px;
+      padding:12px 18px;
+      cursor:pointer;
+      color:#fff;
+      font-weight:700;
+      font-size:16px;
+      background:var(--primary);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .btn:hover{background:var(--primary-hover)}
+
+    .btn.secondary{
+      background:var(--secondary);
+    }
+
+    .btn.secondary:hover{
+      background:var(--secondary-hover);
+    }
+
+    .btn.green{
+      background:#198754;
+    }
+
+    .btn.green:hover{
+      background:#157347;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:12px 10px;
+      align-items:end;
+    }
+
+    .form-group{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .span-2{grid-column:span 2}
+    .span-3{grid-column:span 3}
+    .span-4{grid-column:span 4}
+    .span-6{grid-column:span 6}
+    .span-12{grid-column:span 12}
+
+    label{
+      font-size:11px;
+      font-weight:700;
+      color:#495468;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    input, select{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:6px;
+      background:#fff;
+      font-size:14px;
+      min-height:42px;
+    }
+
+    .readonly{
+      background:#eceff3;
+    }
+
+    .req::after{
+      content:" *";
+      color:#d00000;
+    }
+
+    .hint{
+      font-size:11px;
+      color:#777;
+      margin-top:4px;
+    }
+
+    .status{
+      display:none;
+      padding:12px;
+      border-radius:8px;
+      margin-top:18px;
+      font-weight:700;
+    }
+
+    .status.success{
+      display:block;
+      background:var(--success);
+      color:var(--success-text);
+    }
+
+    .status.error{
+      display:block;
+      background:var(--error);
+      color:var(--error-text);
+    }
+
+    .actions{
+      margin-top:18px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .switch-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-height:42px;
+      padding:0 4px;
+    }
+
+    .switch-wrap input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      min-height:auto;
+      accent-color:#198754;
+    }
+
+    @media (max-width: 980px){
+      .form-grid{grid-template-columns:1fr}
+      .span-2,.span-3,.span-4,.span-6,.span-12{
+        grid-column:span 1;
+      }
+    }
+  
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="container">
+    <h1>Cadastro de Cargos e Salários</h1>
+
+    <div class="top-note">
+      Use este formulário para cadastrar novos cargos ou editar cargos já existentes.
+      <br>
+      Ao selecionar um cargo, os dados serão carregados para edição.
+    </div>
+
+    <div class="toolbar">
+      <a href="index.html" class="btn secondary">↩ Retornar</a>
+      <button type="button" class="btn" id="btn-buscar">Buscar</button>
+      <button type="button" class="btn green" id="btn-novo">Novo</button>
+
+      <select id="sel-cargo" class="combo-top">
+        <option value="">Carregando cargos...</option>
+      </select>
+    </div>
+
+    <form id="cargo-form">
+      <input type="hidden" id="id" name="id">
+
+      <h2>Dados do Cargo</h2>
+
+      <div class="form-grid">
+        <div class="form-group span-2">
+          <label for="id_view">ID</label>
+          <input id="id_view" type="text" class="readonly" readonly>
+        </div>
+
+        <div class="form-group span-6">
+          <label class="req" for="cargo">Cargo</label>
+          <input id="cargo" name="cargo" required>
+        </div>
+
+        <div class="form-group span-4">
+          <label for="ativo">Ativo</label>
+          <div class="switch-wrap">
+            <input type="checkbox" id="ativo" name="ativo">
+            <span id="ativo_label">Sim</span>
+          </div>
+        </div>
+
+        <div class="form-group span-3">
+          <label for="salario">Salário</label>
+          <input id="salario" name="salario" inputmode="decimal" placeholder="0,00">
+        </div>
+
+        <div class="form-group span-3">
+          <label for="bonus">Bônus</label>
+          <input id="bonus" name="bonus" inputmode="decimal" placeholder="0,00">
+        </div>
+
+        <div class="form-group span-3">
+          <label for="carga_horaria">Carga Horária</label>
+          <input id="carga_horaria" name="carga_horaria" inputmode="decimal" placeholder="0">
+        </div>
+
+        <div class="form-group span-3">
+          <label for="salario_hora">Salário Hora</label>
+          <input id="salario_hora" name="salario_hora" inputmode="decimal" placeholder="0,00">
+        </div>
+
+        <div class="form-group span-3">
+          <label for="bonus_hora">Bônus Hora</label>
+          <input id="bonus_hora" name="bonus_hora" inputmode="decimal" placeholder="0,00">
+        </div>
+      </div>
+
+      <div id="status-message" class="status"></div>
+
+      <div class="actions">
+        <button type="button" class="btn secondary" id="btn-limpar">Limpar</button>
+        <button type="submit" class="btn">Salvar Cargo</button>
+      </div>
+
+      <small class="hint">O campo Cargo é obrigatório.</small>
+    </form>
+  </div>
+
+  <script>
+    const LISTAR_CARGOS_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/3697255f-03bf-4f7b-9582-63134c1ae7dc";
+    const BUSCAR_CARGO_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/47daa16d-f2e0-4ed0-8b1c-9ada1e645ef3";
+    const SALVAR_CARGO_WEBHOOK = "https://webhook.maplebearjardins.pro/webhook/c764d234-636c-4f0d-831f-581458f424d7";
+
+    const form = document.getElementById("cargo-form");
+    const selCargo = document.getElementById("sel-cargo");
+    const btnBuscar = document.getElementById("btn-buscar");
+    const btnNovo = document.getElementById("btn-novo");
+    const btnLimpar = document.getElementById("btn-limpar");
+    const statusMessage = document.getElementById("status-message");
+    const ativo = document.getElementById("ativo");
+    const ativoLabel = document.getElementById("ativo_label");
+
+    let selectedCargoValue = "";
+    let cargosCache = [];
+    let isLoadingCombo = false;
+
+    function showMsg(msg, success = true) {
+      statusMessage.textContent = typeof msg === "string" ? msg : JSON.stringify(msg);
+      statusMessage.className = "status " + (success ? "success" : "error");
+    }
+
+    function clearMsg() {
+      statusMessage.textContent = "";
+      statusMessage.className = "status";
+    }
+
+    function updateAtivoLabel() {
+      ativoLabel.textContent = ativo.checked ? "Sim" : "Não";
+    }
+
+    function parseBoolean(value) {
+      return value === true || value === "true" || value === 1 || value === "1" || value === "TRUE";
+    }
+
+    function parseNumberBr(value) {
+      const s = String(value ?? "").trim();
+      if (!s) return null;
+      const normalized = s.replace(/\./g, "").replace(",", ".");
+      const n = Number(normalized);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatNumberToInput(value) {
+      if (value === undefined || value === null || value === "") return "";
+      return String(value).replace(".", ",");
+    }
+
+    function normalizeText(value) {
+      return String(value ?? "").trim();
+    }
+
+    function extractList(data) {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === "object") {
+        const candidates = [
+          data.data,
+          data.items,
+          data.rows,
+          data.result,
+          data.records,
+          data.body,
+          data.output
+        ];
+
+        for (const candidate of candidates) {
+          if (Array.isArray(candidate)) return candidate;
+        }
+      }
+      return [];
+    }
+
+    function limparFormulario(manterSelect = false) {
+      document.getElementById("id").value = "";
+      document.getElementById("id_view").value = "";
+      document.getElementById("cargo").value = "";
+      document.getElementById("salario").value = "";
+      document.getElementById("bonus").value = "";
+      document.getElementById("carga_horaria").value = "";
+      document.getElementById("salario_hora").value = "";
+      document.getElementById("bonus_hora").value = "";
+      ativo.checked = true;
+      updateAtivoLabel();
+      clearMsg();
+
+      if (!manterSelect) {
+        selectedCargoValue = "";
+        selCargo.value = "";
+      }
+    }
+
+    function preencherFormulario(obj) {
+      document.getElementById("id").value = obj.id ?? obj.ID ?? "";
+      document.getElementById("id_view").value = obj.id ?? obj.ID ?? "";
+      document.getElementById("cargo").value = obj.Cargo ?? obj.cargo ?? "";
+      document.getElementById("salario").value = formatNumberToInput(obj.Salario ?? obj.salario);
+      document.getElementById("bonus").value = formatNumberToInput(obj.Bonus ?? obj.bonus);
+      document.getElementById("carga_horaria").value = formatNumberToInput(obj["Carga horaria"] ?? obj.carga_horaria);
+      document.getElementById("salario_hora").value = formatNumberToInput(obj["Salario hora"] ?? obj.salario_hora);
+      document.getElementById("bonus_hora").value = formatNumberToInput(obj["Bonus Hora"] ?? obj.bonus_hora);
+
+      ativo.checked = parseBoolean(obj.Ativo ?? obj.ativo);
+      updateAtivoLabel();
+    }
+
+    function montarCombo(list, selectedValue = "") {
+      isLoadingCombo = true;
+
+      selCargo.innerHTML = "";
+
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = "Selecione um cargo";
+      selCargo.appendChild(first);
+
+      list
+        .slice()
+        .sort((a, b) => {
+          const cargoA = normalizeText(a.Cargo ?? a.cargo);
+          const cargoB = normalizeText(b.Cargo ?? b.cargo);
+          return cargoA.localeCompare(cargoB, "pt-BR");
+        })
+        .forEach(item => {
+          const nome = normalizeText(item.Cargo ?? item.cargo);
+          const id = item.id ?? item.ID ?? "";
+
+          if (!nome) return;
+
+          const option = document.createElement("option");
+          option.value = nome;
+          option.textContent = nome;
+          option.dataset.id = String(id);
+          selCargo.appendChild(option);
+        });
+
+      if (selectedValue && [...selCargo.options].some(opt => opt.value === selectedValue)) {
+        selCargo.value = selectedValue;
+      } else {
+        selCargo.value = "";
+      }
+
+      isLoadingCombo = false;
+    }
+
+    async function carregarListaCargos(selectedValue = "") {
+      try {
+        const res = await fetch(LISTAR_CARGOS_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+
+        const text = await res.text();
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+
+        const list = extractList(data);
+
+        if (!list.length) {
+          selCargo.innerHTML = '<option value="">Nenhum cargo encontrado</option>';
+          cargosCache = [];
+          return;
+        }
+
+        cargosCache = list;
+        montarCombo(cargosCache, selectedValue || selectedCargoValue);
+      } catch (error) {
+        console.error("Erro ao carregar cargos:", error);
+        selCargo.innerHTML = '<option value="">Erro ao carregar cargos</option>';
+        cargosCache = [];
+      }
+    }
+
+    function encontrarCargoNoCache(valorSelecionado) {
+      const valor = normalizeText(valorSelecionado);
+      if (!valor) return null;
+
+      return cargosCache.find(item => normalizeText(item.Cargo ?? item.cargo) === valor) || null;
+    }
+
+    async function buscarCargoSelecionado() {
+      const valorSelecionado = normalizeText(selCargo.value);
+
+      if (!valorSelecionado) {
+        alert("Selecione um cargo no combo.");
+        return;
+      }
+
+      selectedCargoValue = valorSelecionado;
+      clearMsg();
+
+      const itemCache = encontrarCargoNoCache(valorSelecionado);
+
+      if (itemCache) {
+        preencherFormulario(itemCache);
+        selCargo.value = valorSelecionado;
+        return;
+      }
+
+      try {
+        const payload = { cargo: valorSelecionado };
+
+        const res = await fetch(BUSCAR_CARGO_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+
+        let reg = null;
+
+        if (Array.isArray(data)) {
+          reg = data.find(item => normalizeText(item.Cargo ?? item.cargo) === valorSelecionado) || data[0] || null;
+        } else if (data && typeof data === "object") {
+          if (Array.isArray(data.data)) {
+            reg = data.data.find(item => normalizeText(item.Cargo ?? item.cargo) === valorSelecionado) || data.data[0] || null;
+          } else if (Array.isArray(data.rows)) {
+            reg = data.rows.find(item => normalizeText(item.Cargo ?? item.cargo) === valorSelecionado) || data.rows[0] || null;
+          } else {
+            reg = data;
+          }
+        }
+
+        if (!reg) {
+          showMsg("Cargo não encontrado.", false);
+          return;
+        }
+
+        preencherFormulario(reg);
+        selCargo.value = valorSelecionado;
+      } catch (error) {
+        console.error("Erro ao buscar cargo:", error);
+        showMsg("Erro ao buscar cargo.", false);
+      }
+    }
+
+    async function salvarCargo(event) {
+      event.preventDefault();
+      clearMsg();
+
+      if (SALVAR_CARGO_WEBHOOK.includes("COLE_AQUI_O_ENDPOINT_REAL_DO_CARGOS_SALVAR")) {
+        showMsg("Configure o endpoint real do webhook SALVAR_CARGO_WEBHOOK antes de salvar.", false);
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
+
+      const cargo = normalizeText(document.getElementById("cargo").value);
+
+      if (!cargo) {
+        showMsg("O campo Cargo é obrigatório.", false);
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar Cargo";
+        return;
+      }
+
+      const payload = {
+        id: document.getElementById("id").value || null,
+        cargo: cargo,
+        ativo: ativo.checked,
+        salario: parseNumberBr(document.getElementById("salario").value),
+        bonus: parseNumberBr(document.getElementById("bonus").value),
+        carga_horaria: parseNumberBr(document.getElementById("carga_horaria").value),
+        salario_hora: parseNumberBr(document.getElementById("salario_hora").value),
+        bonus_hora: parseNumberBr(document.getElementById("bonus_hora").value)
+      };
+
+      try {
+        const resp = await fetch(SALVAR_CARGO_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const contentType = (resp.headers.get("content-type") || "").toLowerCase();
+        let data = null;
+        let text = "";
+
+        if (contentType.includes("application/json")) {
+          try { data = await resp.json(); } catch {}
+        } else {
+          try { text = await resp.text(); } catch {}
+        }
+
+        if (!resp.ok) {
+          showMsg((data && (data.message || data.error)) || text || "Falha ao salvar cargo.", false);
+          return;
+        }
+
+        const cargoSalvo = normalizeText((data && (data.cargo || data.Cargo)) || payload.cargo);
+        const idSalvo = (data && (data.id || data.ID)) || payload.id || "";
+
+        showMsg((data && data.message) || text || "Cargo salvo com sucesso!", true);
+
+        if (idSalvo) {
+          document.getElementById("id").value = idSalvo;
+          document.getElementById("id_view").value = idSalvo;
+        }
+
+        selectedCargoValue = cargoSalvo;
+
+        await carregarListaCargos(cargoSalvo);
+
+        if (cargoSalvo) {
+          selCargo.value = cargoSalvo;
+          document.getElementById("cargo").value = cargoSalvo;
+        }
+      } catch (error) {
+        console.error("Erro ao salvar cargo:", error);
+        showMsg("Erro ao salvar cargo: " + (error.message || error), false);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar Cargo";
+      }
+    }
+
+    selCargo.addEventListener("change", async () => {
+      if (isLoadingCombo) return;
+
+      const valor = normalizeText(selCargo.value);
+      selectedCargoValue = valor;
+
+      if (!valor) {
+        limparFormulario(true);
+        return;
+      }
+
+      await buscarCargoSelecionado();
+    });
+
+    btnBuscar.addEventListener("click", buscarCargoSelecionado);
+
+    btnNovo.addEventListener("click", () => {
+      limparFormulario(false);
+      document.getElementById("cargo").focus();
+    });
+
+    btnLimpar.addEventListener("click", () => {
+      limparFormulario(false);
+    });
+
+    ativo.addEventListener("change", updateAtivoLabel);
+    form.addEventListener("submit", salvarCargo);
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      limparFormulario(false);
+      await carregarListaCargos("");
+    });
+  </script>
+
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

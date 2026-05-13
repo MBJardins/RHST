@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<script>
+  // ── AUTH GUARD ──
+  (function(){
+    if(!localStorage.getItem('mb_logged_in')){
+      window.location.replace('login.html');
+    }
+  })();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forms · SAÍDA · Maple Bear Jardins RH</title>
+  <style>
+    :root{
+      --brand:#1a73e8; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --bg:#f6f7fb; --card:#ffffff; --shadow:0 8px 24px rgba(2,6,23,.06);
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial; background:#f6f7fb; color:#111827; }
+    .container{ max-width:1200px; margin:28px auto 40px; padding:0 16px; }
+    header h1{ display:flex; gap:10px; align-items:center; font-weight:900; letter-spacing:.2px; font-size:clamp(26px,4.5vw,40px); margin:0 0 8px; }
+    header h1 .ico{ width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:#e9f0fe; color:#1a73e8; font-size:24px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow); }
+    a.btn, button.btn, select{ appearance:none; border:1px solid var(--line); background:#eef2f7; padding:10px 14px; border-radius:12px; font-size:15px; color:#111827; text-decoration:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer; transition:transform .02s ease, background .15s ease; }
+    button.btn:hover, a.btn:hover{ background:#e3e9f2 } button.btn:active, a.btn:active{ transform:translateY(1px) }
+    .btn.primary{ background:linear-gradient(180deg,#2a85ff,#1a73e8); color:#fff; border:none; box-shadow:0 8px 18px rgba(26,115,232,.25) }
+    .sp{ flex:1 }
+    .muted{ color:#6b7280; font-size:13px }
+    #status{ margin-top:8px; color:#374151; font-size:14px }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
+
+    /* Impressão A4 (mesmo padrão do fentrada) */
+    .scaler{ transform-origin: top left; display:inline-block }
+    @media print{
+      html,body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pwrap{ padding:0 !important }
+      .page{ box-shadow:none !important; margin:0 !important; width:210mm; height:297mm;
+             page-break-after: always; break-after: page; }
+      .page:last-child, .page:last-of-type{ page-break-after: auto; break-after: auto; }
+    }
+
+    .inner{ padding:8mm 14mm 9mm; font-size:11pt; line-height:1.28; }
+    .title{ font-weight:900; font-size:13pt; margin:2mm 0 3mm; text-transform:uppercase; text-align:center }
+    .meta{ display:flex; gap:6mm; margin:1mm 0; align-items:baseline }
+    .meta b{ font-weight:700 }
+
+    /* Checklist em duas colunas (idêntico ao de entrada) */
+    .panel{
+      width:100%;
+      border:1px solid #9ca3af;
+      padding:3.2mm 5mm;
+      margin-top:1.5mm;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap:10mm;
+      row-gap:2.5mm;
+    }
+    .ck{ display:flex; align-items:flex-start; gap:3mm; }
+    .ck .b{ width:9pt;height:9pt;box-sizing:border-box;border:1.2pt solid #c53030;border-radius:2px; }
+  
+  /* ── LOADING OVERLAY GLOBAL ── */
+  #mb-loading-overlay{
+    display:none;position:fixed;inset:0;z-index:99999;
+    background:rgba(241,245,249,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+  }
+  #mb-loading-overlay.show{ display:flex; }
+  .mb-loading-box{
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 64px rgba(2,6,23,.14),0 2px 8px rgba(2,6,23,.06);
+    padding:28px 36px;display:flex;align-items:center;gap:20px;
+    min-width:280px;max-width:420px;
+    animation:mbFadeIn .2s ease;
+  }
+  @keyframes mbFadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .mb-spinner{
+    width:40px;height:40px;flex:0 0 40px;
+    border:3px solid #e2e8f0;
+    border-top-color:#1a73e8;
+    border-radius:50%;
+    animation:mbSpin .7s linear infinite;
+  }
+  @keyframes mbSpin{to{transform:rotate(360deg)}}
+  .mb-loading-text{ display:flex;flex-direction:column;gap:3px; }
+  .mb-loading-title{ font-weight:800;font-size:16px;color:#111827; }
+  .mb-loading-sub{ font-size:13px;color:#64748b; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY GLOBAL -->
+<div id="mb-loading-overlay">
+  <div class="mb-loading-box">
+    <div class="mb-spinner"></div>
+    <div class="mb-loading-text">
+      <span class="mb-loading-title" id="mb-loading-title">Atualizando informações</span>
+      <span class="mb-loading-sub" id="mb-loading-sub">Aguarde um momento...</span>
+    </div>
+  </div>
+</div>
+
+  <div class="container">
+    <header>
+      <h1><span class="ico">🖨️</span> Forms · SAÍDA</h1>
+      <div class="row"><a class="btn" href="index.html">↩️ Retornar ao início</a></div>
+      <div class="muted">Relatório de desligamento — Checklist de Saída.</div>
+    </header>
+
+    <section class="card">
+      <div class="grid">
+        <div>
+          <div class="row">
+            <label class="muted" for="sel-nome">Nome:</label>
+            <select id="sel-nome"><option value="">Selecione um nome</option></select>
+            <button class="btn primary" id="btn-gerar">🔄 Gerar relatório</button>
+            <div class="sp"></div>
+          </div>
+          <div id="status">Aguardando seleção…</div>
+        </div>
+        <div>
+          <div class="muted" style="margin-bottom:6px">Checklist disponível:</div>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="chk_saida"> Checklist de Saída</label>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+// ====== ENDPOINTS (iguais ao fentrada) ======
+const URL_LISTA_NOMES = "https://webhook.maplebearjardins.pro/webhook/e1fb46c9-bc88-4de1-96f2-a83a5370d101";
+const URL_SAIDA       = "https://webhook.maplebearjardins.pro/webhook/72950248-d00d-4a41-8311-fa9dddef1a9e"; // mesmo do fentrada :contentReference[oaicite:2]{index=2}
+
+// ====== ELEMENTOS ======
+const selNome = document.getElementById('sel-nome');
+const btnGerar = document.getElementById('btn-gerar');
+const statusEl = document.getElementById('status');
+
+// ====== HELPERS (copiados do fentrada) ======
+const norm = s => String(s||"").trim().toLowerCase();
+function toArray(x){
+  if(Array.isArray(x)) return x;
+  if(x && Array.isArray(x.data)) return x.data;
+  if(x && Array.isArray(x.body)) return x.body;
+  if(x && typeof x==='object') return [x];
+  return [];
+}
+function pick(obj, keys){
+  if (!obj) return undefined;
+  const map = Object.fromEntries(Object.keys(obj).map(k=>[norm(k), k]));
+  for (const k of keys){ const hit = map[norm(k)]; if (hit) return obj[hit]; }
+  for (const k in obj){ const nk = norm(k); if (keys.some(w => nk.includes(norm(w)))) return obj[k]; }
+  return undefined;
+}
+function getFromMany(arrOrObj, keys){
+  const arr = Array.isArray(arrOrObj) ? arrOrObj : [arrOrObj];
+  for (const o of arr){ const v = pick(o, keys); if (v!==undefined && String(v).trim()!=="") return v; }
+  return "";
+}
+function v(val, blank="&nbsp;"){ return (String(val||"").trim()||blank); }
+
+// ====== POPUP ======
+function openPopup(title){
+  const pop = window.open('about:blank','_blank','width=1100,height=800');
+  if(!pop){ alert('Pop-up bloqueado. Libere pop-ups para este site.'); return null; }
+  const style = `
+    body{margin:0;font-family:"Times New Roman", Georgia, serif;background:#fff;color:#111827}
+    .page{width:210mm;height:297mm;margin:0 auto 10mm;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.06);position:relative;overflow:hidden;display:block}
+    .header{height:22mm;border-bottom:1px solid #d1d5db;display:flex;align-items:flex-end;background:#fff}
+    .header img{width:100%;height:100%;object-fit:cover}
+    .inner{ padding:8mm 14mm 9mm; font-size:11pt; line-height:1.28; }
+    .title{ font-weight:900; font-size:13pt; margin:2mm 0 3mm; text-transform:uppercase; text-align:center }
+    .panel{ width:100%; border:1px solid #9ca3af; padding:3.2mm 5mm; margin-top:1.5mm; display:grid; grid-template-columns: 1fr 1fr; column-gap:10mm; row-gap:2.5mm; }
+    .ck{ display:flex; align-items:flex-start; gap:3mm; }
+    .ck .b{ width:9pt;height:9pt;box-sizing:border-box;border:1.2pt solid #c53030;border-radius:2px; }
+    @media print{
+      html,body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page{ box-shadow:none !important; margin:0 !important; width:210mm; height:297mm; page-break-after: always; break-after: page; }
+      .page:last-child{ page-break-after: auto; break-after: auto; }
+    }
+  `;
+  pop.document.open();
+  pop.document.write(`<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>${title} · Maple Bear Jardins RH</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>${style}</style></head><body><div class="page page-checklist"><div class="header"><img src="cabecalho.png" alt="Cabeçalho" onerror="this.style.display='none'"></div><div class="inner" id="inner"></div></div>
+<script>
+// ── LOADING OVERLAY HELPERS ──
+window.mbLoading = {
+  show: function(title, sub){
+    document.getElementById('mb-loading-title').textContent = title || 'Atualizando informações';
+    document.getElementById('mb-loading-sub').textContent   = sub   || 'Aguarde um momento...';
+    document.getElementById('mb-loading-overlay').classList.add('show');
+  },
+  hide: function(){
+    document.getElementById('mb-loading-overlay').classList.remove('show');
+  }
+};
+
+// Intercepta todos os fetch() da página para mostrar/ocultar automaticamente
+(function(){
+  const origFetch = window.fetch;
+  let pending = 0;
+  window.fetch = function(){
+    pending++;
+    const label = (typeof arguments[0] === 'string') ? arguments[0].split('/').pop() : '';
+    window.mbLoading.show('Atualizando informações', 'Comunicando com o servidor...');
+    return origFetch.apply(this, arguments).finally(function(){
+      pending--;
+      if(pending <= 0){ pending = 0; window.mbLoading.hide(); }
+    });
+  };
+})();
+</script>
+
+</body></html>`);
+  pop.document.close();
+  return pop;
+}
+
+// ====== RENDER ======
+function pageChecklistSaida(d){
+  const nome = getFromMany(d,["nome","colaborador"]);
+  const cargo = getFromMany(d,["cargo","função","funcao"]);
+  const info  = getFromMany(d,["informações","informacao","informações adicionais","obs"]);
+  const ck = s => `<div class="ck"><div class="b"></div><div>${s}</div></div>`;
+
+  const itens = [
+    "Assinatura termo de quitação de rescisão (3 vias)",
+    "Excluir do seguro de vida",
+    "Excluir do seguro saúde",
+    "Contrato de rescisão (para estagiário)",
+    "Devolver o crachá",
+    "Receber os uniformes",
+    "Incluir a data de desligamento no banco de dados",
+    "Incluir como desligado no sistema de ponto",
+    "Retirar da folha de pagamento do banco",
+    "Retirar a pasta do funcionário do arquivo e colocar no arq de ex funcionário",
+    "Solicitar documento de rescisão para contador",
+    "Carta de demissão",
+    "Retirar do grupo de WhatsApp",
+    "Carta de demissão LGPD",
+    "Tablet",
+    "Pós",
+    "Excluir assistência médica",
+    "Excluir benefícios",
+    "Plano odontológico",
+    "Devolução de iPad e computador",
+    "Retirar do ponto de saída",
+    "Suspender e-mail"
+  ];
+
+  return `
+    <div class="title">CHECK LIST DE SAÍDA</div>
+    <div class="meta"><b>Nome:</b> ${v(nome,"")}</div>
+    <div class="meta"><b>Cargo:</b> ${v(cargo,"")}</div>
+    <div class="meta" style="margin-bottom:3mm"><b>Informações:</b> ${v(info,"")}</div>
+    <div class="panel">
+      ${itens.map(ck).join("")}
+    </div>
+  `;
+}
+// ====== AÇÕES ======
+async function carregarNomes(){
+  statusEl.textContent = "Carregando nomes…";
+  try{
+    const res = await fetch(URL_LISTA_NOMES, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:"listar_nomes"}) });
+    const text = await res.text(); let data;
+    try{ data = JSON.parse(text) } catch{ data = text }
+    const arr = toArray(data);
+
+    const getNome = o => (typeof o==="string") ? o : (o.nome || o.Nome || o.name || o.NOME || o.colaborador || "");
+    const getCodigo = o => (o.codigo || o.Código || o["Código"] || o.id || o.ID || "");
+
+    selNome.innerHTML = `<option value="">Selecione um nome</option>` + arr.map(o => {
+      const nome = getNome(o); const codigo = getCodigo(o);
+      if (!nome) return "";
+      const val = JSON.stringify({ nome, codigo }).replace(/'/g,"&apos;");
+      return `<option value='${val}'>${nome}</option>`;
+    }).join("");
+
+    statusEl.textContent = "Nomes carregados. Selecione um.";
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = "Falha ao carregar nomes (CORS/rede).";
+  }
+}
+
+async function gerar(){
+  const opt = selNome.value;
+  if (!opt){ alert("Selecione um nome."); return; }
+  if (!document.getElementById('chk_saida').checked){ alert("Selecione o checklist de saída."); return; }
+
+  let parsed={}; try{ parsed = JSON.parse(opt); }catch{}
+  const payload = { nome: parsed.nome || selNome.options[selNome.selectedIndex].text, codigo: parsed.codigo || null };
+
+  statusEl.textContent = "Buscando dados…";
+  let dataArr = [];
+  try{
+    const res = await fetch(URL_SAIDA, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const text = await res.text(); try{ dataArr = toArray(JSON.parse(text)); } catch{ dataArr = toArray(text); }
+  }catch(e){ console.error(e); }
+
+  if (!dataArr.length){ alert("Nenhum dado retornado do webhook."); return; }
+
+  const pop = openPopup("Checklist de Saída — " + (payload.nome || ""));
+  if (!pop) return;
+  pop.document.getElementById('inner').innerHTML = pageChecklistSaida(dataArr);
+  statusEl.textContent = "Pop-up gerado. Use o menu do navegador para imprimir.";
+}
+
+// init
+document.addEventListener('DOMContentLoaded', ()=>{
+  carregarNomes();
+  btnGerar.addEventListener('click', gerar);
+});
+</script>
+</body>
+</html>
