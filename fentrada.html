@@ -438,6 +438,8 @@ function addPage(html, cls = ""){
 const DOCS = [
   { id: "1",  label: "Imagem — MB Jardins" },
   { id: "2",  label: "Imagem — Bear Chef" },
+  { id: "17", label: "Imagem — ST Educação" },
+  { id: "18", label: "Imagem — MB Central" },
   { id: "3",  label: "Carta de abertura de conta" },
   { id: "8",  label: "Termos de Confidencialidade (Sumário)" },
   { id: "9",  label: "Checklist de Contratação" },
@@ -478,39 +480,46 @@ function toggleAll(){
 function L(label, val){ return `<div class="row"><div class="lab">${label}</div><div class="val pad">${v(val)}</div></div>`; }
 
 // (1) Imagem MB Jardins
-function pageImagemMBJardins(d){
-  const nome = getFromMany(d,["nome","colaborador"]);
-  const cidade = getFromMany(d,["cidade"]) || "São Paulo";
-  const data = fmtDateLong(new Date(), cidade);
+// ===== FORMULÁRIO DE IMAGEM DO COLABORADOR (um por empresa) =====
+function formImagem(d, emp){
+  const c = dadosColaborador(d);
+  const cidade   = getFromMany(d,["cidade"]) || "São Paulo";
+  const dataLong = fmtDateLong(new Date(), cidade);
+  const ident = emp.cnpj
+    ? `${emp.razao}, inscrita no CNPJ sob o nº ${emp.cnpj}${emp.im?`, Inscrição Municipal nº ${emp.im}`:""}, ${emp.endereco}`
+    : `${emp.razao}, ${emp.endereco}`;
+  const qualif = [
+    c.rg  ? `RG nº <b>${c.rg}</b>`   : "",
+    c.cpf ? `CPF nº <b>${c.cpf}</b>` : ""
+  ].filter(Boolean).join(", ");
   return `
-    <div class="title" style="text-align:center">AUTORIZAÇÃO DE USO DE IMAGEM — MAPLE BEAR JARDINS</div>
-    <p class="p">Eu, <b>${v(nome)}</b>, autorizo, de forma gratuita, o uso da minha imagem em materiais institucionais da Maple Bear, para fins de divulgação interna e externa, em qualquer mídia e por prazo indeterminado.</p>
-    <div class="signature" style="margin-top:18mm">
-      <div class="sigline">${v(nome,"Assinatura")}</div>
-      <div>${data}</div>
+    <div class="scaler">
+      <div class="title">FORMULÁRIO DE IMAGEM DO COLABORADOR</div>
+      <p class="p">A <span class="mb">${emp.marca}</span> solicita a autorização para a sua participação nas filmagens e fotos que serão utilizadas para a divulgação institucional do Programa.</p>
+      <p class="p">Por gentileza, preencham o “de acordo” que segue abaixo.</p>
+      <p class="p" style="font-size:10pt; margin-top:5mm"><b>${ident}.</b></p>
+      <div class="p" style="margin-top:8mm"><span class="mb">${emp.marca.toUpperCase()}</span></div>
+      <p class="p">Eu <b>${v(c.nome)}</b>${qualif?`, ${qualif}`:""}, autorizo a reprodução da minha imagem na filmagem e foto para a divulgação institucional da escola.</p>
+      <div style="display:flex; gap:16mm; margin-top:6mm">
+        <div><span class="rad"></span> SIM AUTORIZO</div>
+        <div><span class="rad"></span> NÃO AUTORIZO</div>
+      </div>
+      <p class="p" style="margin-top:10mm">${dataLong}</p>
+      <div class="signature" style="margin-top:18mm">
+        <div class="sigline">Assinatura</div>
+        <div class="sigline" style="max-width:45mm">Data</div>
+      </div>
     </div>
   `;
 }
+function pageImagemMBJardins(d){ return formImagem(d, EMP_MBJ); }
 
 // (2) Imagem Bear Chef
-function pageImagemBearChef(d){
-  const nome = getFromMany(d,["nome","colaborador"]) || "";
-  return `
-    <div class="title">FORMULÁRIO DE IMAGEM DO COLABORADOR</div>
-    <p class="p">A <span class="mb">Bear Chef</span> solicita a autorização para a sua participação nas filmagens e fotos que serão utilizadas para a divulgação institucional do Programa.</p>
-    <p class="p">Por gentileza, preencham o “de acordo” que segue abaixo.</p>
-    <div class="p" style="margin-top:12mm"><span class="mb">BEAR CHEF</span></div>
-    <p class="p">Eu <b>${v(nome)}</b>, autorizo a reprodução da minha imagem na filmagem e foto para a divulgação institucional da escola.</p>
-    <div style="display:flex; gap:16mm; margin-top:6mm">
-      <div><span class="rad"></span> SIM AUTORIZO</div>
-      <div><span class="rad"></span> NÃO AUTORIZO</div>
-    </div>
-    <div class="signature" style="margin-top:22mm">
-      <div class="sigline">Assinatura</div>
-      <div class="sigline" style="max-width:40mm">Data</div>
-    </div>
-  `;
-}
+function pageImagemBearChef(d){ return formImagem(d, EMP_BC); }
+
+// Imagem — ST Educação e MB Central
+function pageImagemSTEducacao(d){ return formImagem(d, EMP_ST); }
+function pageImagemMBCentral(d){ return formImagem(d, EMP_MBC); }
 
 // (3) Carta de abertura de conta
 function pageCartaBanco(d){
@@ -805,42 +814,118 @@ function blocoAssinaturas(entidade){
     <div class="signature" style="margin-top:8mm"><div class="sigline">Testemunha 1 — Nome / RG</div><div class="sigline">Testemunha 2 — Nome / RG</div></div>
   `;
 }
-function pageTermoMBJardins(d){
-  const ent  = "ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB JARDINS";
-  const doc1 = "CNPJ nº 36.195.301/0001-65";
-  const doc2 = "Inscrição Municipal nº 6.516.138-6 · Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
-  addPage( termoCabecalho("Termo de Confidencialidade — MB JARDINS")
-         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
-         + termoQualificacao(d) + termoClausulas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB JARDINS") + blocoAssinaturas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO") );
+// sublinhado inline preenchido com o dado do colaborador
+function U(val){ return `<span style="border-bottom:1px solid #111;padding:0 6px;white-space:nowrap">${v(val,"&nbsp;")}</span>`; }
+
+// dados pessoais do colaborador, vindos do webhook
+function dadosColaborador(d){
+  return {
+    nome:  getFromMany(d,["nome","colaborador"]),
+    nac:   getFromMany(d,["nacionalidade"]),
+    estciv:getFromMany(d,["estado civil","estadocivil"]),
+    prof:  getFromMany(d,["profissão","profissao","cargo"]),
+    rg:    getFromMany(d,["rg","carteira de identidade"]),
+    cpf:   formatCPF(getFromMany(d,["cpf"])),
+    nasc:  fmtDate(getFromMany(d,["data de nascimento","data nascimento","nascimento"])),
+    local: getFromMany(d,["local de nascimento","naturalidade","cidade natal"]),
+    end:   compEndereco(d)
+  };
 }
-function pageTermoMBCentral(d){
-  const ent  = "ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB CENTRAL";
-  const doc1 = "CNPJ nº 36.195.301/0001-65";
-  const doc2 = "Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
-  addPage( termoCabecalho("Termo de Confidencialidade — MB CENTRAL")
-         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
-         + termoQualificacao(d) + termoClausulas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO — MB CENTRAL") + blocoAssinaturas("ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO") );
+
+// ===== Dados oficiais das empresas (Comprovantes CNPJ) =====
+const EMP_ST  = { titulo:"ST Educação", marca:"ST Educação", razao:"ST EDUCAÇÃO LTDA",
+                  cnpj:"56.051.894/0001-01", im:"14637243",
+                  endereco:"na Rua Coronel Paulino Carlos, nº 126 – Paraíso, CEP 04006-040, São Paulo – SP" };
+const EMP_MBJ = { titulo:"MB Jardins", marca:"Maple Bear Jardins", razao:"ASSOCIAÇÃO EDUCACIONAL CANADENSE DE SÃO PAULO",
+                  cnpj:"36.195.301/0001-65", im:"",
+                  endereco:"na Rua Marari, nº 178 – Vila Alpina, CEP 03205-030, São Paulo – SP" };
+const EMP_BC  = { titulo:"Bear Chef", marca:"Bear Chef", razao:"JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA",
+                  cnpj:"45.931.302/0001-11", im:"",
+                  endereco:"na Rua Coronel Paulino Carlos, nº 126 – Paraíso, CEP 04006-040, São Paulo – SP" };
+const EMP_MBC = { titulo:"MB Central", marca:"Maple Bear", razao:"LACES – CANADIAN EDUCATION SERVICES LATIN AMERICA LTDA",
+                  cnpj:"", im:"",
+                  endereco:"com sede em 1430 – Terrace Avenue, North Vancouver, BC V7R 1B4, Canadá" };
+
+// ===== MODELO 1: Declaração (ST Educação / MB Jardins / Bear Chef) =====
+function termoDeclaracao(d, emp){
+  const c  = dadosColaborador(d);
+  const im = emp.im ? `Inscrição Municipal sob nº ${emp.im}, ` : "";
+
+  // Página 1
+  addPage(`
+    <div class="scaler">
+      <div class="title" style="text-align:center">Termo de Confidencialidade${emp.titulo ? ` – ${emp.titulo}` : ""}</div>
+      <p class="p"><b>Pelo presente termo de confidencialidade, de um lado:</b></p>
+      <p class="p"><b>${emp.razao}</b>, pessoa jurídica, devidamente inscrita no CNPJ sob o nº <b>${emp.cnpj}</b>, ${im}com sede ${emp.endereco}.</p>
+      <p class="p">Sr(a) ${U(c.nome)}</p>
+      <p class="p">(nacionalidade) ${U(c.nac)} &nbsp;&nbsp; (estado civil) ${U(c.estciv)}</p>
+      <p class="p">(profissão) ${U(c.prof)} portador(a) da cédula de identidade RG nº ${U(c.rg)}, e do CPF nº ${U(c.cpf)},</p>
+      <p class="p">concordo em tomar todas as precauções para assegurar a confidencialidade, integridade e não disponibilidade de qualquer informação sigilosa, seja ela interna ou externa, que tenha sido confiada a mim pela <b>${emp.razao}</b>.</p>
+      <p class="p">Estou ciente de que serão consideradas Informações Sigilosas para efeito desse termo toda informação escrita, verbal ou de qualquer outro modo apresentada, independentemente da mídia utilizada, tangível ou intangível, podendo incluir, mas não se limitando a: métodos pedagógicos, modelos pedagógicos, informações de cunho acadêmico, estratégias acadêmicas e comerciais, modelos de negócio, iconografias, informações pedagógicas, técnicas, designs, especificações, desenhos, cópias, diagramas, fórmulas, modelos, métodos, planejamentos, amostras, fluxogramas, croquis, fotografias, programas de computador, pen drive, contratos, documentos padrão, arquivos de referência, formulários, processos, projetos, programas, conceitos de produto, amostras de ideias, clientes, nomes de revendedores e/ou distribuidores, fornecedores, preços e custos, definições e informações mercadológicas, invenções, outras informações técnicas, acadêmicas, financeiras, operacionais e/ou comerciais, conversas de WhatsApp, dentre outros.</p>
+    </div>
+  `);
+
+  // Página 2
+  addPage(`
+    <div class="scaler">
+      <p class="p">Desse modo assumo, pessoalmente, irrevogável e irretratavelmente, a obrigação de não as revelar, reproduzir, repassar, expor ou divulgar, sob qualquer meio, pretexto, fundamento ou justificativa, as informações a que por qualquer razão tiver acesso, bem como de manter a confidencialidade de tais informações que vierem a ser de meu conhecimento durante todo o tempo em que estiver atuando em nome da <b>${emp.razao}</b>, permanecendo em vigor desde a data da revelação das informações confidenciais até <b>05 (cinco) anos</b> após o término do vínculo empregatício ao qual este é vinculado, obrigando-me a cumprir e respeitar todas as condições relativas à confidencialidade, as quais declaro ser de meu inteiro conhecimento.</p>
+      <p class="p">Eu entendo e concordo que não estou autorizado(a) a utilizar esta informação para propósitos particulares, da mesma forma eu não tenho liberdade para repassar esta informação a terceiros sem o consentimento expresso e por escrito da <b>${emp.razao}</b>.</p>
+      <p class="p">Declaro-me ainda ciente de que, na hipótese de violação do sigilo a que ora me obrigo a manter sobre tudo aquilo que vier a ser de meu conhecimento durante o exercício de minhas atividades, estarei sujeito(a) a medidas judiciais e extrajudiciais de ordem penal, civil e administrativa.</p>
+      <p class="p" style="margin-top:12mm">São Paulo, ______ de __________________ de __________</p>
+      <div class="signature" style="margin-top:18mm"><div class="sigline">${emp.razao}</div></div>
+      <div class="signature" style="margin-top:14mm"><div class="sigline">Colaborador(a)</div></div>
+    </div>
+  `);
 }
-function pageTermoBearChef(d){
-  const ent  = "JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA — BEAR CHEF";
-  const doc1 = "CNPJ nº 45.931.302/0001-11";
-  const doc2 = "IE nº 134.744.019.110 · Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
-  addPage( termoCabecalho("Termo de Confidencialidade — BEAR CHEF")
-         + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
-         + termoQualificacao(d) + termoClausulas("JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA — BEAR CHEF") + blocoAssinaturas("JARDINS COMÉRCIO PRODUTOS ALIMENTÍCIOS LTDA") );
+
+// ===== MODELO 2: LACES / MB Central (duas partes + cláusulas) =====
+function termoLaces(d){
+  const c = dadosColaborador(d);
+
+  // Página 1
+  addPage(`
+    <div class="scaler">
+      <div class="title" style="text-align:center">Termo de Confidencialidade</div>
+      <p class="p"><b>Pelo presente termo de confidencialidade, de um lado:</b></p>
+      <p class="p"><b>LACES – CANADIAN EDUCATION SERVICES LATIN AMERICA LTDA.</b>, com sede em 1430 – Terrace Avenue, North Vancouver, BC V7R 1B4, Canadá, doravante denominada <b>PARTE REVELADORA</b>;</p>
+      <p class="p"><b>e de outro lado:</b></p>
+      <p class="p">Sr.(a) ${U(c.nome)} &nbsp;&nbsp; nacionalidade ${U(c.nac)} &nbsp;&nbsp; profissão ${U(c.prof)}</p>
+      <p class="p">RG nº ${U(c.rg)} &nbsp;&nbsp; CPF nº ${U(c.cpf)}</p>
+      <p class="p">Data de nascimento ${U(c.nasc)} &nbsp;&nbsp; local de nascimento ${U(c.local)}</p>
+      <p class="p">endereço ${U(c.end)}</p>
+      <p class="p">doravante denominada <b>PARTE RECEPTORA</b>, têm entre si justo e contratado, na melhor forma de direito, o seguinte:</p>
+      <p class="p"><b>1. Cláusula Primeira – Do Objeto</b></p>
+      <p class="p">1.1 O objeto deste Termo é prover a necessária e adequada proteção às informações confidenciais fornecidas por uma das PARTES à outra.</p>
+      <p class="p"><b>2. Cláusula Segunda – Das Informações Confidenciais</b></p>
+      <p class="p">2.1 As PARTES se obrigam a manter o mais absoluto sigilo com relação a toda e qualquer informação, conforme abaixo definida, que venha a ser, a partir desta data, fornecida pela Maple Bear Canadian School, devendo ser tratada como informação sigilosa.</p>
+      <p class="p">2.2 Deverá ser considerada como informação confidencial toda e qualquer informação escrita ou oral revelada, contendo ela ou não a expressão "CONFIDENCIAL". O termo "Informação" abrangerá toda informação escrita, verbal ou de qualquer outro modo apresentada, tangível ou intangível, podendo incluir: know-how, técnicas, manuais, planos de aula, especificações, desenhos, cópias, modelos, amostras, fotografias, discos, disquetes, fitas, contratos, processos, projetos, conceitos de produto, especificações, amostras de ideia, preços e custos, definições e informações mercadológicas, invenções e ideias, outras informações técnicas, financeiras ou comerciais, dentre outros, doravante denominados "INFORMAÇÕES CONFIDENCIAIS", a que, diretamente ou através de seus diretores, empregados e/ou prepostos, venha a PARTE RECEPTORA ter acesso, conhecimento ou que venha a lhe ser confiadas.</p>
+      <p class="p">2.3 Comprometem-se a não revelar, reproduzir, utilizar ou dar conhecimento, em hipótese alguma, a terceiros.</p>
+    </div>
+  `);
+
+  // Página 2
+  addPage(`
+    <div class="scaler">
+      <p class="p"><b>3. Cláusula Sexta – Da Vigência</b></p>
+      <p class="p">3.1 O presente Termo tem natureza irrevogável e irretratável, permanecendo em vigor desde a data da revelação das INFORMAÇÕES CONFIDENCIAIS durante o período de existência da Maple Bear Canadian School no Brasil.</p>
+      <p class="p"><b>4. Cláusula Sétima – Das Penalidades</b></p>
+      <p class="p">4.1 A quebra do sigilo profissional, devidamente comprovada, sem autorização expressa da PARTE REVELADORA, possibilitará a imediata adoção de medidas judiciais de reparo e indenizatórias, sem qualquer ônus para a PARTE REVELADORA. Neste caso, a PARTE RECEPTORA estará sujeita, por ação ou omissão, ao pagamento ou recomposição de todas as perdas e danos sofridas pela PARTE REVELADORA, inclusive as de ordem moral ou concorrencial, bem como as de responsabilidades civil e criminal respectivas, as quais serão apuradas em regular processo judicial ou administrativo.</p>
+      <p class="p"><b>5. Do Foro</b></p>
+      <p class="p">5.1 Fica eleito o foro de domicílio da PARTE REVELADORA para dirimir toda e qualquer dúvida ou litígio oriundo deste termo.</p>
+      <p class="p">E por estar assim justa e contratada, a parte receptora assina o presente instrumento em 02 (duas) vias de igual teor e forma, na presença de duas testemunhas.</p>
+      <p class="p" style="margin-top:8mm">______________________, ______ de __________________ de ________.</p>
+      <div class="signature" style="margin-top:14mm"><div class="sigline">LACES – CANADIAN EDUCATION SERVICES LATIN AMERICA LTDA<br>PARTE REVELADORA</div></div>
+      <div class="signature" style="margin-top:12mm"><div class="sigline">PARTE RECEPTORA<br>(qualificada neste contrato)</div></div>
+      <div class="signature" style="margin-top:10mm"><div class="sigline">Testemunha 1 — Nome / RG</div><div class="sigline">Testemunha 2 — Nome / RG</div></div>
+    </div>
+  `);
 }
-function pageTermoSTEducacao(d){
-  const ent  = "ST EDUCAÇÃO";
-  const doc1 = "CNPJ nº 56.051.894/0001-01";
-  const doc2 = "Rua Coronel Paulino Carlos, 126 — Paraíso, São Paulo-SP, CEP 04006-040";
-  addPage(
-    termoCabecalho("Termo de Confidencialidade — ST EDUCAÇÃO")
-    + `<p class="p">Pelo presente termo de confidencialidade, de um lado: <b>${ent}</b>, ${doc1}, ${doc2}; e, de outro lado, o(a) colaborador(a) abaixo qualificado(a).</p>`
-    + termoQualificacao(d)
-    + termoClausulas("ST EDUCAÇÃO")
-    + blocoAssinaturas("ST EDUCAÇÃO")
-  );
-}
+
+// ===== Mapeamento dos botões/relatórios para cada empresa =====
+function pageTermoMBJardins(d){ termoDeclaracao(d, EMP_MBJ); }
+function pageTermoMBCentral(d){ termoLaces(d); }
+function pageTermoBearChef(d){ termoDeclaracao(d, EMP_BC); }
+function pageTermoSTEducacao(d){ termoDeclaracao(d, EMP_ST); }
 
 // (12) Crachá
 function pageCracha(d){
@@ -1018,6 +1103,8 @@ async function gerar(){
 for (const id of ids){
   if (id==="1") addPage(pageImagemMBJardins(dataArr));
   else if (id==="2") addPage(pageImagemBearChef(dataArr));
+  else if (id==="17") addPage(pageImagemSTEducacao(dataArr));
+  else if (id==="18") addPage(pageImagemMBCentral(dataArr));
   else if (id==="3") addPage(pageCartaBanco(dataArr));
   else if (id==="8") addPage(pageTermosSumario(dataArr));
   else if (id==="9") addPage(pageChecklist(dataArr), "page-checklist");
