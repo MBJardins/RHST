@@ -360,6 +360,9 @@ const WEBHOOK_JORNADAS = "https://webhook.maplebearjardins.pro/webhook/rh_relato
 const WEBHOOK_SEM_JORNADA = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_sem_jornada_001";
 const WEBHOOK_INCONSISTENCIAS = "https://webhook.maplebearjardins.pro/webhook/rh_relatorio_inconsistencias_001";
 
+// Guarda o último relatório carregado para a impressão em pop-up
+let ultimoRelatorio = { rows: [], tipo: "", mes: null };
+
 function csvEscape(v){
   if(v === null || v === undefined) return "";
   const s = String(v).replace(/"/g,'""');
@@ -570,6 +573,7 @@ async function buscar(){
     rows = filtrarPorFuncionario(rows, nome);
 
     render(rows);
+    ultimoRelatorio = { rows: rows.slice(), tipo, mes };
 
     const filtroMsg = nome ? ` | filtro: ${nome} (${rows.length}/${totalOriginal})` : "";
     const titulo = tipo === "atualizacao_cadastral" ? "Atualização cadastral" : "Relatório";
@@ -579,6 +583,7 @@ async function buscar(){
 
 function limpar(){
   esconderCracha();
+  ultimoRelatorio = { rows: [], tipo: "", mes: null };
   setVal("sel-funcionario", "");
   setVal("nome", "");
   setVal("cpf", "");
@@ -589,14 +594,247 @@ function limpar(){
   clearMsg();
 }
 
+/* ======================= IMPRESSÃO EM POP-UP ======================= */
+function escHTML(s){ return String(s ?? "").replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function nomeMes(m){
+  return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][(Number(m)-1+12)%12] || '';
+}
+
+// Abre um pop-up limpo, escreve o conteúdo e dispara a impressão
+// Encolhe o conteúdo (.scaler) para caber em uma única página A4
+function autoFitOnePage(pop){
+  try{
+    const page   = pop.document.querySelector('.page');
+    const scaler = pop.document.querySelector('.scaler');
+    if(!page || !scaler) return;
+    const avail = page.clientHeight;
+    const need  = scaler.scrollHeight;
+    if(need > avail && avail > 0){
+      const scale = avail / need;
+      scaler.style.transform = 'scale(' + scale + ')';
+      scaler.style.width = (100 / scale) + '%';
+    }
+  }catch(e){ console.warn('Auto-ajuste falhou:', e); }
+}
+
+function abrirPopupImpressao(title, bodyHTML, opts = {}){
+  const { extraCSS = "", orientation = "landscape", autoprint = true, fitPage = false } = opts;
+  const pop = window.open('about:blank', '_blank', 'width=1100,height=800');
+  if(!pop){ alert('Pop-up bloqueado. Libere pop-ups para este site.'); return null; }
+
+  const baseCSS = `
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:#fff;color:#1f2937}
+    .top{position:sticky;top:0;background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 14px;display:flex;gap:8px;align-items:center;z-index:50}
+    .top h1{font-size:17px;margin:0;font-weight:800}
+    .top .sp{flex:1}
+    .pbtn{appearance:none;border:none;background:linear-gradient(180deg,#2a85ff,#1a73e8);color:#fff;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+    .pbtn:hover{filter:brightness(1.05)}
+    .wrap{padding:14px}
+    table{width:100%;border-collapse:collapse;border:1px solid #e5e7eb}
+    th,td{border-bottom:1px solid #e5e7eb;padding:7px 9px;text-align:left;font-size:12px;vertical-align:top}
+    th{background:#f1f5f9;font-weight:800;color:#374151}
+    thead{display:table-header-group}
+    tr{break-inside:avoid}
+    ${fitPage ? '' : `@page{ size:A4 ${orientation}; margin:10mm; }`}
+    @media print{
+      .top{display:none}
+      .wrap{padding:0}
+      html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    }
+  `;
+
+  // Em página única, o conteúdo entra dentro de .page > .scaler (sem .wrap)
+  const corpo = fitPage
+    ? '<div class="page"><div class="scaler">' + bodyHTML + '</div></div>'
+    : '<div class="wrap">' + bodyHTML + '</div>';
+
+  pop.document.open();
+  pop.document.write(
+    '<!doctype html><html lang="pt-br"><head><meta charset="utf-8">' +
+    '<title>' + escHTML(title) + '</title>' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<style>' + baseCSS + extraCSS + '</style></head><body>' +
+    '<div class="top"><h1>' + escHTML(title) + '</h1><div class="sp"></div>' +
+    '<button class="pbtn" onclick="window.print()">🖨️ Imprimir</button></div>' +
+    corpo +
+    '</body></html>'
+  );
+  pop.document.close();
+  pop.focus();
+
+  if(fitPage){
+    setTimeout(function(){
+      autoFitOnePage(pop);
+      if(autoprint){ setTimeout(function(){ try{ pop.focus(); pop.print(); }catch(e){} }, 180); }
+    }, 280);
+  } else if(autoprint){
+    setTimeout(function(){ try{ pop.focus(); pop.print(); }catch(e){} }, 500);
+  }
+  return pop;
+}
+
+// ===== IMPRESSÃO DO CRACHÁ (Fargo C50 — cartão 54 x 85,5 mm) =====
+function imprimirCracha(){
+  const photoEl = document.getElementById('badgePhoto');
+  const maskEl  = document.getElementById('badgeMask');
+  const fotoSrc = (photoEl && photoEl.getAttribute('src')) ? photoEl.src : "";
+  const maskSrc = (maskEl && maskEl.src) ? maskEl.src : "";
+  const nome       = (document.getElementById('badgeNome')?.textContent || "").trim();
+  const sobrenome  = (document.getElementById('badgeSobrenome')?.textContent || "").trim();
+
+  const css = `
+    @page{ size:54mm 85.5mm; margin:0; }
+    *{box-sizing:border-box}
+    html,body{ margin:0; padding:0; background:#fff;
+               -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .badge-canvas{ width:54mm; height:85.5mm; position:relative; background:#fff; overflow:hidden; }
+    .badge-mask{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+    .badge-photo{ position:absolute; left:10.8mm; top:13mm; width:33mm; height:42.4mm;
+                  object-fit:cover; border-radius:2mm; box-shadow:0 0 0 1.5mm #fff; z-index:3; background:#f1f5f9; }
+    .badge-name{ position:absolute; left:0; right:0; z-index:4; text-align:center; color:#fff;
+                 font-family:Montserrat,Segoe UI,Arial,sans-serif;
+                 text-shadow:0 1px 2px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.35); line-height:1; }
+    .badge-name .nome{ position:absolute; top:58.8mm; left:50%; transform:translateX(-50%); font-size:6mm; font-weight:900; white-space:nowrap; }
+    .badge-name .sobrenome{ position:absolute; top:65mm; left:50%; transform:translateX(-50%); font-size:4.3mm; font-weight:700; white-space:nowrap; }
+  `;
+
+  const pop = window.open('about:blank', '_blank', 'width=360,height=620');
+  if(!pop){ alert('Pop-up bloqueado. Libere pop-ups para este site.'); return; }
+
+  pop.document.open();
+  pop.document.write(
+    '<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Crachá</title>' +
+    '<style>' + css + '</style></head><body>' +
+    '<div class="badge-canvas">' +
+      (maskSrc ? '<img class="badge-mask" src="' + maskSrc + '" alt="">' : '') +
+      (fotoSrc ? '<img class="badge-photo" src="' + fotoSrc + '" alt="">' : '<div class="badge-photo"></div>') +
+      '<div class="badge-name"><div class="nome">' + escHTML(nome) + '</div>' +
+      '<div class="sobrenome">' + escHTML(sobrenome) + '</div></div>' +
+    '</div>' +
+    '</body></html>'
+  );
+  pop.document.close();
+  pop.focus();
+
+  // Espera as imagens (máscara + foto) carregarem antes de imprimir
+  const imgs = pop.document.images;
+  const total = imgs.length;
+  let done = false;
+  const tryPrint = function(){ if(done) return; done = true; try{ pop.focus(); pop.print(); }catch(e){} };
+  if(total === 0){ setTimeout(tryPrint, 300); }
+  else{
+    let loaded = 0;
+    const check = function(){ loaded++; if(loaded >= total) setTimeout(tryPrint, 150); };
+    for(const im of imgs){
+      if(im.complete) check();
+      else{ im.addEventListener('load', check, {once:true}); im.addEventListener('error', check, {once:true}); }
+    }
+    setTimeout(tryPrint, 2000); // fallback
+  }
+}
+
+// Monta a tabela genérica (todos os relatórios em formato de lista)
+function montarTabelaPopup(rows){
+  if(!rows || !rows.length) return '<p style="padding:20px">Sem dados.</p>';
+  const headers = Object.keys(rows[0]);
+  const thead = '<tr>' + headers.map(h => '<th>' + escHTML(h) + '</th>').join('') + '</tr>';
+  const tbody = rows.map(r => '<tr>' + headers.map(h => '<td>' + escHTML(r[h]) + '</td>').join('') + '</tr>').join('');
+  return '<table><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+}
+
+// Página enfeitada para aniversariantes
+const CSS_ANIVERSARIANTES = `
+  body{ background:#fff; }
+  .page{ width:210mm; height:297mm; margin:0 auto; position:relative; overflow:hidden; background:#fff; }
+  .scaler{ transform-origin:top left; width:100%; padding:7mm 8mm 6mm; }
+  .bheader{
+    position:relative; text-align:center; color:#fff; border-radius:18px;
+    padding:16px 20px 12px; overflow:hidden;
+    background:linear-gradient(135deg,#c8102e 0%,#e23a57 55%,#ff7a90 100%);
+    box-shadow:0 10px 24px rgba(200,16,46,.25);
+  }
+  .bheader .confetti{ font-size:22px; letter-spacing:8px; }
+  .bheader h1{ margin:4px 0 0; font-size:30px; font-weight:900; letter-spacing:.5px; }
+  .bheader .mes{ font-size:17px; font-weight:800; text-transform:uppercase; letter-spacing:5px; margin-top:4px; }
+  .bheader .sub{ font-size:12px; opacity:.92; margin-top:5px; }
+  .bheader::before, .bheader::after{
+    content:""; position:absolute; border-radius:50%;
+    background:rgba(255,255,255,.14);
+  }
+  .bheader::before{ width:140px; height:140px; top:-60px; left:-40px; }
+  .bheader::after{ width:100px; height:100px; bottom:-50px; right:-26px; }
+  .bgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .bcard{
+    display:flex; align-items:center; gap:8px;
+    border:1px solid #ffd5dd; border-radius:11px; padding:7px 9px;
+    background:linear-gradient(180deg,#ffffff,#fff4f6);
+    box-shadow:0 1px 4px rgba(200,16,46,.06); break-inside:avoid;
+  }
+  .dbadge{
+    flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+    background:linear-gradient(135deg,#c8102e,#ff6a83); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(200,16,46,.3);
+  }
+  .dbadge .d{ font-size:16px; font-weight:900; line-height:1; }
+  .dbadge .lbl{ font-size:6px; text-transform:uppercase; letter-spacing:1px; opacity:.92; margin-top:1px; }
+  .bname{ font-size:10.5px; font-weight:700; color:#3a2018; line-height:1.18; }
+  .bfooter{ text-align:center; margin-top:14px; color:#9f0d25; font-weight:800; font-size:12px; }
+  .empty{ grid-column:1/-1; text-align:center; padding:30px; color:#9ca3af; font-size:15px; }
+  @page{ size:A4 portrait; margin:0; }
+  @media print{ html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact} }
+`;
+
+function montarPaginaAniversariantes(rows, mes){
+  const lista = (rows || []).map(x => ({
+      dia: Number(x.dia ?? x.Dia ?? x.DIA ?? x.day ?? 0) || 0,
+      nome: String(x.nome ?? x.Nome ?? x.NOME ?? x.funcionario ?? x.colaborador ?? "").trim()
+    }))
+    .filter(r => r.nome)
+    .sort((a,b) => (a.dia - b.dia) || a.nome.localeCompare(b.nome, "pt-BR"));
+
+  const cards = lista.length
+    ? lista.map(r => `
+        <div class="bcard">
+          <div class="dbadge"><span class="d">${r.dia || '--'}</span><span class="lbl">dia</span></div>
+          <div class="bname">${escHTML(r.nome)}</div>
+        </div>`).join("")
+    : '<div class="empty">Nenhum aniversariante neste mês 🎈</div>';
+
+  return `
+    <div class="poster">
+      <div class="bheader">
+        <div class="confetti">🎈 🎂 🎉</div>
+        <h1>Aniversariantes</h1>
+        <div class="mes">${escHTML(nomeMes(mes))}</div>
+        <div class="sub">${lista.length} aniversariante(s) no mês</div>
+      </div>
+      <div class="bgrid">${cards}</div>
+      <div class="bfooter">🐻 Maple Bear Jardins · RH</div>
+    </div>`;
+}
+
+function imprimirRelatorio(){
+  const { rows, tipo, mes } = ultimoRelatorio;
+  if(!rows || !rows.length){ window.print(); return; }
+
+  if(tipo === "aniversariantes_mes"){
+    abrirPopupImpressao(
+      "Aniversariantes — " + nomeMes(mes),
+      montarPaginaAniversariantes(rows, mes),
+      { extraCSS: CSS_ANIVERSARIANTES, orientation: "portrait", fitPage: true }
+    );
+  } else {
+    const titulo = (document.querySelector("#tipo option:checked")?.textContent || "Relatório").trim();
+    abrirPopupImpressao(titulo, montarTabelaPopup(rows), { orientation: "landscape" });
+  }
+}
+
 document.getElementById("btn-buscar").addEventListener("click", buscar);
 document.getElementById("btn-limpar").addEventListener("click", limpar);
-document.getElementById("printBtn").addEventListener("click", () => window.print());
-document.getElementById("printBadgeBtn").addEventListener("click", () => {
-  document.body.classList.add("print-badge");
-  window.print();
-  setTimeout(() => document.body.classList.remove("print-badge"), 500);
-});
+document.getElementById("printBtn").addEventListener("click", imprimirRelatorio);
+document.getElementById("printBadgeBtn").addEventListener("click", imprimirCracha);
 document.getElementById("sel-funcionario").addEventListener("change", sincronizarNomeSelecionado);
 document.addEventListener("DOMContentLoaded", carregarFuncionariosAtivos);
 </script>
